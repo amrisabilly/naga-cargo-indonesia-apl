@@ -17,16 +17,15 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 5),
       vsync: this,
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 8), () {
+    Future.delayed(const Duration(seconds: 4), () {
       _controller.reverse().then((_) {
-        // Ganti '/login' dengan route login Anda
         context.go('/login');
       });
     });
@@ -57,7 +56,6 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Ganti dengan logo asset Anda
                     Image.asset(
                       'assets/images/naga_cargo.png',
                       width: 120,
@@ -78,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: TextStyle(fontSize: 14, color: Colors.white70),
                     ),
                     const SizedBox(height: 24),
-                    // Loading spinner (opsional)
+                    // Loading spinner
                     const CircularProgressIndicator(
                       color: Colors.white,
                       strokeWidth: 2,
@@ -86,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ],
                 ),
               ),
-              // Versi aplikasi di kanan bawah
+              // Versi aplikasi
               const Positioned(
                 right: 16,
                 bottom: 16,

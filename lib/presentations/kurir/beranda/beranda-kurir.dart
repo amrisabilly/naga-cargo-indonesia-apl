@@ -127,14 +127,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.notifications_outlined,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
                       ],
                     ),
 
@@ -157,7 +149,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                         controller: _searchController,
                         onChanged: _performSearch,
                         decoration: InputDecoration(
-                          hintText: 'Cari nomor resi atau pengirim...',
+                          hintText: 'Cari nomor resi...',
                           prefixIcon: const Icon(
                             Icons.search,
                             color: Color(0xFF4A90E2),
@@ -220,27 +212,25 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
           const SizedBox(height: 20),
           if (!_isSearching) ...[
             // Tampilan default
-            const Text(
-              'Pencarian Data Resi',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+            Center(
+              child: Text(
+                'Pencarian Data Resi',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'Ketik nomor resi atau nama pengirim untuk mencari data pengiriman',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 30),
+            SizedBox(height: 30),
             Center(
               child: Column(
                 children: [
                   Icon(Icons.search, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 20),
                   Text(
-                    'Mulai pencarian untuk melihat data resi',
+                    'Ketik nomor resi untuk mencari data pengiriman',
+                    textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                   ),
                 ],
