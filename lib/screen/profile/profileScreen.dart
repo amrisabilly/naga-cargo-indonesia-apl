@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cargo_app/screen/profile/konfirmasiLogoutScreen.dart';
-import 'package:cargo_app/screen/profile/fotoProfileScreen.dart';
 
 class ProfileKurirScreen extends StatefulWidget {
   const ProfileKurirScreen({super.key});
@@ -11,7 +9,6 @@ class ProfileKurirScreen extends StatefulWidget {
 }
 
 class _ProfileKurirScreenState extends State<ProfileKurirScreen> {
-  String? profileImageUrl;
   final Map<String, String> profileData = {
     'nama': 'Ahmad Kurniawan',
     'nomorHp': '+62 812-3456-7890',
@@ -70,14 +67,22 @@ class _ProfileKurirScreenState extends State<ProfileKurirScreen> {
                       ],
                     ),
                     const SizedBox(height: 40),
-                    // Foto Profile (widget terpisah)
-                    FotoProfileWidget(
-                      imageUrl: profileImageUrl,
-                      onEdit: () {}, // Tidak perlu, sudah di-handle di widget
-                      onTakePhoto: _takePhoto,
-                      onPickFromGallery: _pickFromGallery,
-                      onRemovePhoto:
-                          profileImageUrl != null ? _removePhoto : null,
+                    // Foto Profile Dummy
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: _buildDefaultAvatar(),
                     ),
                     const SizedBox(height: 10),
                     // Nama
@@ -261,6 +266,24 @@ class _ProfileKurirScreenState extends State<ProfileKurirScreen> {
     );
   }
 
+  Widget _buildDefaultAvatar() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF4A90E2).withOpacity(0.3),
+            const Color(0xFF357ABD).withOpacity(0.3),
+          ],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.person, size: 60, color: Color(0xFF4A90E2)),
+      ),
+    );
+  }
+
   Widget _buildCompactInfoCard({
     required IconData icon,
     required String title,
@@ -319,66 +342,6 @@ class _ProfileKurirScreenState extends State<ProfileKurirScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _takePhoto() {
-    setState(() {
-      profileImageUrl = 'https://picsum.photos/300/300?random=profile';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Foto profile berhasil diperbarui'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  void _pickFromGallery() {
-    setState(() {
-      profileImageUrl = 'https://picsum.photos/300/300?random=gallery';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Foto profile berhasil diperbarui'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  void _removePhoto() {
-    setState(() {
-      profileImageUrl = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.info, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Foto profile berhasil dihapus'),
-          ],
-        ),
-        backgroundColor: Colors.orange,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
