@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cargo_app/presentations/kurir/beranda/foto-preview.dart';
+import 'package:cargo_app/screen/beranda/previewScreen.dart';
 
 class FotoWidget extends StatefulWidget {
   final String resi;

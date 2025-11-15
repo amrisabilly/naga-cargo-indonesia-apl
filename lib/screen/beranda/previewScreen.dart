@@ -112,12 +112,14 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
                           ),
                         ),
                         IconButton(
-                          onPressed: _showPhotoGrid,
-                          icon: const Icon(
-                            Icons.grid_view,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                          // HAPUS: onPressed: _showPhotoGrid,
+                          // HAPUS: icon: const Icon(
+                          //   Icons.grid_view,
+                          //   color: Colors.white,
+                          //   size: 28,
+                          // ),
+                          onPressed: null,
+                          icon: const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -414,163 +416,5 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
 
   bool _isAllPhotosComplete() {
     return widget.photoUrls.every((url) => url != null);
-  }
-
-  void _showPhotoGrid() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            height: MediaQuery.of(context).size.height * 0.8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                // Title
-                const Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: Text(
-                    'Semua Foto Dokumentasi',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-
-                // Grid
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                        ),
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
-                      return _buildGridItem(index);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _buildGridItem(int index) {
-    final photoUrl = widget.photoUrls[index];
-    final step = photoSteps[index];
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pop();
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: photoUrl != null ? Colors.green[300]! : Colors.grey[300]!,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child:
-                    photoUrl != null
-                        ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            photoUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                  size: 30,
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                        : Center(
-                          child: Icon(
-                            Icons.camera_alt,
-                            size: 30,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-              ),
-            ),
-
-            // Title and status
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(
-                    step['title'].toString().split(':')[1].trim(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Icon(
-                    photoUrl != null
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    size: 16,
-                    color:
-                        photoUrl != null ? Colors.green[600] : Colors.grey[400],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

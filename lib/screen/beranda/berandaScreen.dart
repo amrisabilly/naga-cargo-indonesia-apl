@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cargo_app/presentations/kurir/beranda/profile-kurir.dart';
+import 'package:cargo_app/screen/profile/profileScreen.dart';
 import 'package:go_router/go_router.dart';
 
 class BerandaKurirScreen extends StatefulWidget {
@@ -14,19 +14,15 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   bool _isSearching = false;
   List<Map<String, String>> _searchResults = [];
 
-  // Data dummy untuk hasil pencarian
+  // Data dummy hanya resi, alamat, dan status
   final List<Map<String, String>> _dummyData = [
     {
       'resi': 'NC001234567',
-      'pengirim': 'PT. ABC Jakarta',
-      'penerima': 'Toko XYZ Surabaya',
       'alamat': 'Jl. Merdeka No. 123, Surabaya',
       'status': 'Siap Diambil',
     },
     {
       'resi': 'NC001234568',
-      'pengirim': 'CV. DEF Bandung',
-      'penerima': 'UD. GHI Yogyakarta',
       'alamat': 'Jl. Malioboro No. 45, Yogyakarta',
       'status': 'Siap Diambil',
     },
@@ -43,7 +39,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                       item['resi']!.toLowerCase().contains(
                         query.toLowerCase(),
                       ) ||
-                      item['pengirim']!.toLowerCase().contains(
+                      item['alamat']!.toLowerCase().contains(
                         query.toLowerCase(),
                       ),
                 )
@@ -87,12 +83,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const ProfileKurirScreen(),
-                              ),
-                            );
+                            context.go('/profile');
                           },
                           child: const CircleAvatar(
                             radius: 25,
@@ -149,7 +140,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                         controller: _searchController,
                         onChanged: _performSearch,
                         decoration: InputDecoration(
-                          hintText: 'Cari nomor resi...',
+                          hintText: 'Cari nomor resi atau alamat...',
                           prefixIcon: const Icon(
                             Icons.search,
                             color: Color(0xFF4A90E2),
@@ -211,7 +202,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
         children: [
           const SizedBox(height: 20),
           if (!_isSearching) ...[
-            // Tampilan default
             Center(
               child: Text(
                 'Pencarian Data Resi',
@@ -229,7 +219,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                   Icon(Icons.search, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 20),
                   Text(
-                    'Ketik nomor resi untuk mencari data pengiriman',
+                    'Ketik nomor resi atau alamat untuk mencari data pengiriman',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                   ),
@@ -237,7 +227,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
               ),
             ),
           ] else ...[
-            // Hasil pencarian
             Text(
               'Hasil Pencarian (${_searchResults.length})',
               style: const TextStyle(
@@ -337,10 +326,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildInfoRow('Pengirim', data['pengirim']!),
-            const SizedBox(height: 8),
-            _buildInfoRow('Penerima', data['penerima']!),
-            const SizedBox(height: 8),
             _buildInfoRow('Alamat', data['alamat']!),
             const SizedBox(height: 15),
             SizedBox(

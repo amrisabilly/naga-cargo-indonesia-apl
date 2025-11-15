@@ -1,8 +1,9 @@
-import 'package:cargo_app/auth/testlogin.dart';
-import 'package:cargo_app/landing/landing.dart';
-import 'package:cargo_app/presentations/kurir/beranda/beranda-kurir.dart';
-import 'package:cargo_app/presentations/kurir/beranda/foto-kurir.dart';
-import 'package:cargo_app/presentations/pic/beranda/beranda-pic.dart';
+import 'package:cargo_app/auth/loginScreen.dart';
+import 'package:cargo_app/screen/profile/profileScreen.dart';
+import 'package:cargo_app/screen/profile/riwayatScreen.dart';
+import 'package:cargo_app/splash/splashScreen.dart';
+import 'package:cargo_app/screen/beranda/berandaScreen.dart';
+import 'package:cargo_app/screen/beranda/scanScreen.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(
@@ -12,12 +13,16 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/Login', builder: (context, state) => const LoginScreen()),
     //GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
-      path: '/beranda_kurir',
+      path: '/beranda',
       builder: (context, state) => const BerandaKurirScreen(),
     ),
     GoRoute(
-      path: '/beranda_pic',
-      builder: (context, state) => const BerandaPicScreen(),
+      path: '/riwayat',
+      builder: (context, state) => const RiwayatKurirScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileKurirScreen(),
     ),
     GoRoute(
       path: '/foto_kurir',

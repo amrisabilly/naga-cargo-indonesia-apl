@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cargo_app/presentations/kurir/beranda/foto.dart';
+import 'package:cargo_app/screen/beranda/fotoScreen.dart';
+import 'package:go_router/go_router.dart';
 
 class FotoKurirScreen extends StatefulWidget {
   final String resi;
@@ -23,7 +24,6 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Header dengan gradient - sama seperti beranda
           Container(
             height: screenHeight * 0.18,
             width: double.infinity,
@@ -44,7 +44,7 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => context.go('/beranda'),
                           icon: const Icon(
                             Icons.arrow_back,
                             color: Colors.white,
@@ -72,14 +72,6 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.help_outline,
-                            color: Colors.white,
-                            size: 28,
                           ),
                         ),
                       ],
