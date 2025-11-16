@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cargo_app/screen/beranda/fotoScreen.dart';
+import 'package:cargo_app/screen/beranda/scanFotoScreen.dart';
 import 'package:go_router/go_router.dart';
 
 class FotoKurirScreen extends StatefulWidget {

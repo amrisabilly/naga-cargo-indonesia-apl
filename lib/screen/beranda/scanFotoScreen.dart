@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cargo_app/screen/beranda/previewScreen.dart';
+import 'package:cargo_app/screen/beranda/previewFotoScreen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,45 +23,45 @@ class _FotoWidgetState extends State<FotoWidget> {
   final List<Map<String, dynamic>> photoSteps = [
     {
       'title': 'Tampak Keseluruhan',
-      'description': 'Foto barang secara keseluruhan',
-      'icon': Icons.photo_camera,
-      'illustration': 'overall',
+      'description':
+          'Pastikan seluruh barang tampak jelas seperti contoh di bawah.',
+      'image': 'assets/images/keseluruhan.jpg',
     },
     {
-      'title': 'Label Alamat',
-      'description': 'Foto label alamat penerima',
-      'icon': Icons.label,
-      'illustration': 'label',
+      'title': 'Tampak Barang',
+      'description':
+          'Pastikan label alamat penerima terlihat jelas seperti contoh di bawah.',
+      'image': 'assets/images/barang.jpg',
     },
     {
       'title': 'Nomor Resi',
-      'description': 'Foto nomor resi pada paket',
-      'icon': Icons.qr_code,
-      'illustration': 'resi',
+      'description':
+          'Pastikan nomor resi pada paket terlihat jelas seperti contoh di bawah.',
+      'image': 'assets/images/resi.jpg',
     },
     {
-      'title': 'Kondisi Kemasan',
-      'description': 'Foto kondisi fisik kemasan',
-      'icon': Icons.inventory,
-      'illustration': 'packaging',
+      'title': 'Tampak Kanan',
+      'description':
+          'Pastikan kondisi fisik kemasan terlihat seperti contoh di bawah.',
+      'image': 'assets/images/kanan.jpg',
     },
     {
-      'title': 'Tanda Tangan',
-      'description': 'Foto tanda tangan penerima',
-      'icon': Icons.edit,
-      'illustration': 'signature',
+      'title': 'Tampak Kiri',
+      'description':
+          'Pastikan tanda tangan penerima terlihat jelas seperti contoh di bawah.',
+      'image': 'assets/images/kiri.jpg',
     },
     {
       'title': 'Identitas Penerima',
-      'description': 'Foto KTP/SIM penerima',
-      'icon': Icons.badge,
-      'illustration': 'id',
+      'description':
+          'Pastikan KTP/SIM penerima terlihat jelas seperti contoh di bawah.',
+      'image': 'assets/images/barang.jpg',
     },
     {
       'title': 'Serah Terima',
-      'description': 'Foto bersama dengan penerima',
-      'icon': Icons.people,
-      'illustration': 'handover',
+      'description':
+          'Pastikan foto bersama penerima dan paket seperti contoh di bawah.',
+      'image': 'assets/images/barang.jpg',
     },
   ];
 
@@ -72,7 +72,6 @@ class _FotoWidgetState extends State<FotoWidget> {
       child: Column(
         children: [
           const SizedBox(height: 10),
-
           // Progress indicator dengan angka
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8),
@@ -119,7 +118,6 @@ class _FotoWidgetState extends State<FotoWidget> {
               }),
             ),
           ),
-
           // Info singkat
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -151,9 +149,7 @@ class _FotoWidgetState extends State<FotoWidget> {
               ),
             ],
           ),
-
           const SizedBox(height: 15),
-
           // Content utama tanpa scroll
           Expanded(
             child: Column(
@@ -206,9 +202,7 @@ class _FotoWidgetState extends State<FotoWidget> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 15),
-
                 // Title dan description singkat
                 Text(
                   photoSteps[currentStep]['title'],
@@ -219,17 +213,13 @@ class _FotoWidgetState extends State<FotoWidget> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   photoSteps[currentStep]['description'],
                   style: const TextStyle(fontSize: 14, color: Colors.black54),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 15),
-
                 // Preview foto jika sudah ada
                 if (photoTaken[currentStep] && photoFiles[currentStep] != null)
                   Expanded(
@@ -244,11 +234,12 @@ class _FotoWidgetState extends State<FotoWidget> {
                         borderRadius: BorderRadius.circular(10),
                         child: Stack(
                           children: [
-                            Image.file(
-                              photoFiles[currentStep]!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
+                            Center(
+                              child: Image.file(
+                                photoFiles[currentStep]!,
+                                fit: BoxFit.contain,
+                                height: 220,
+                              ),
                             ),
                             Positioned(
                               top: 8,
@@ -275,15 +266,14 @@ class _FotoWidgetState extends State<FotoWidget> {
                   // Panduan visual kompak
                   Expanded(
                     child: _buildCompactPhotoGuide(
-                      photoSteps[currentStep]['illustration'],
+                      photoSteps[currentStep]['image'],
+                      photoSteps[currentStep]['title'],
                     ),
                   ),
               ],
             ),
           ),
-
           const SizedBox(height: 15),
-
           // Navigation buttons
           _buildNavigationButtons(),
         ],
@@ -291,7 +281,7 @@ class _FotoWidgetState extends State<FotoWidget> {
     );
   }
 
-  Widget _buildCompactPhotoGuide(String type) {
+  Widget _buildCompactPhotoGuide(String imagePath, String title) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -309,7 +299,21 @@ class _FotoWidgetState extends State<FotoWidget> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: _buildIllustration(type),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(imagePath, fit: BoxFit.contain, height: 180),
+            const SizedBox(height: 10),
+            Text(
+              'Contoh: $title',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -347,9 +351,7 @@ class _FotoWidgetState extends State<FotoWidget> {
             ),
           ),
         ),
-
         const SizedBox(height: 10),
-
         // Navigation buttons row
         Row(
           children: [
@@ -390,9 +392,7 @@ class _FotoWidgetState extends State<FotoWidget> {
                   ),
                 ),
               ),
-
             if (currentStep > 0) const SizedBox(width: 10),
-
             // Next button - hanya muncul jika foto sudah diambil
             if (photoTaken[currentStep])
               Expanded(
@@ -426,25 +426,6 @@ class _FotoWidgetState extends State<FotoWidget> {
                   ),
                 ),
               ),
-
-            // Skip button - kompak
-            if (!photoTaken[currentStep] && currentStep < 6)
-              Expanded(
-                child: TextButton(
-                  onPressed: _showSkipDialog,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Lewati',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ],
@@ -456,182 +437,6 @@ class _FotoWidgetState extends State<FotoWidget> {
       setState(() {
         currentStep++;
       });
-    }
-  }
-
-  void _showSkipDialog() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Row(
-              children: [
-                Icon(Icons.warning_amber, color: Colors.orange, size: 24),
-                SizedBox(width: 8),
-                Text('Lewati Foto?', style: TextStyle(fontSize: 16)),
-              ],
-            ),
-            content: Text(
-              'Yakin ingin melewati foto ${photoSteps[currentStep]['title']}?',
-              style: const TextStyle(fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal', style: TextStyle(fontSize: 14)),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _goToNextStep();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                child: const Text(
-                  'Lewati',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  // Illustration methods - simplified
-  Widget _buildIllustration(String type) {
-    switch (type) {
-      case 'overall':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.tv, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Foto Keseluruhan',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'label':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.label, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Label Alamat',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'resi':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.qr_code, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Nomor Resi',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'packaging':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.inventory, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Kondisi Kemasan',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'signature':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.edit, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Tanda Tangan',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'id':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.badge, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Identitas KTP/SIM',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      case 'handover':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.people, size: 50, color: Colors.grey[600]),
-              const SizedBox(height: 8),
-              Text(
-                'Foto Bersama',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      default:
-        return Center(
-          child: Icon(Icons.camera_alt, size: 50, color: Colors.grey[400]),
-        );
     }
   }
 
@@ -669,90 +474,4 @@ class _FotoWidgetState extends State<FotoWidget> {
       });
     }
   }
-}
-
-// Custom painter untuk border putus-putus
-class DashedBorderPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = const Color(0xFF4A90E2)
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke;
-
-    const dashWidth = 8.0;
-    const dashSpace = 4.0;
-
-    // Top border
-    double startX = 0;
-    while (startX < size.width) {
-      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
-      startX += dashWidth + dashSpace;
-    }
-
-    // Right border
-    double startY = 0;
-    while (startY < size.height) {
-      canvas.drawLine(
-        Offset(size.width, startY),
-        Offset(size.width, startY + dashWidth),
-        paint,
-      );
-      startY += dashWidth + dashSpace;
-    }
-
-    // Bottom border
-    startX = size.width;
-    while (startX > 0) {
-      canvas.drawLine(
-        Offset(startX, size.height),
-        Offset(startX - dashWidth, size.height),
-        paint,
-      );
-      startX -= dashWidth + dashSpace;
-    }
-
-    // Left border
-    startY = size.height;
-    while (startY > 0) {
-      canvas.drawLine(Offset(0, startY), Offset(0, startY - dashWidth), paint);
-      startY -= dashWidth + dashSpace;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Custom painter untuk tanda tangan
-class SignaturePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = Colors.black
-          ..strokeWidth = 1.5
-          ..style = PaintingStyle.stroke;
-
-    final path = Path();
-    path.moveTo(size.width * 0.2, size.height * 0.7);
-    path.quadraticBezierTo(
-      size.width * 0.4,
-      size.width * 0.3,
-      size.width * 0.6,
-      size.height * 0.5,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.8,
-      size.height * 0.7,
-      size.width * 0.9,
-      size.height * 0.4,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

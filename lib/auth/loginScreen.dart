@@ -2,8 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controller/loginController.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _obscurePassword = true;
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +181,7 @@ class LoginScreen extends StatelessWidget {
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: loginController.passwordController,
-                                obscureText: true,
+                                obscureText: _obscurePassword,
                                 decoration: InputDecoration(
                                   hintText: 'Masukkan password Anda',
                                   filled: true,
@@ -178,8 +191,13 @@ class LoginScreen extends StatelessWidget {
                                     borderSide: BorderSide.none,
                                   ),
                                   prefixIcon: const Icon(Icons.lock_outlined),
-                                  suffixIcon: const Icon(
-                                    Icons.visibility_off_outlined,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                    ),
+                                    onPressed: _togglePasswordVisibility,
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 16,

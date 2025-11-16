@@ -3,7 +3,7 @@ import 'package:cargo_app/screen/profile/profileScreen.dart';
 import 'package:cargo_app/screen/profile/riwayatScreen.dart';
 import 'package:cargo_app/splash/splashScreen.dart';
 import 'package:cargo_app/screen/beranda/berandaScreen.dart';
-import 'package:cargo_app/screen/beranda/scanScreen.dart';
+import 'package:cargo_app/screen/beranda/modeFotoScreen.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(
@@ -25,7 +25,7 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ProfileKurirScreen(),
     ),
     GoRoute(
-      path: '/foto_kurir',
+      path: '/fotoScreen',
       builder: (context, state) {
         final args = state.extra as Map<String, dynamic>?;
         final resi = args?['resi'] ?? '';

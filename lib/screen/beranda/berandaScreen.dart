@@ -51,7 +51,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   }
 
   void _navigateToFoto(String resi) {
-    context.go('/foto_kurir', extra: {'resi': resi});
+    context.go('/fotoScreen', extra: {'resi': resi});
   }
 
   @override
