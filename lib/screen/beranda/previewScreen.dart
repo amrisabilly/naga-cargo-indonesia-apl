@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class FotoPreviewScreen extends StatefulWidget {
   final String resi;
-  final List<String?> photoUrls;
+  final List<File?> photoFiles;
   final Function(int) onRetakePhoto;
   final VoidCallback onComplete;
 
   const FotoPreviewScreen({
     super.key,
     required this.resi,
-    required this.photoUrls,
+    required this.photoFiles,
     required this.onRetakePhoto,
     required this.onComplete,
   });
@@ -111,16 +112,7 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          // HAPUS: onPressed: _showPhotoGrid,
-                          // HAPUS: icon: const Icon(
-                          //   Icons.grid_view,
-                          //   color: Colors.white,
-                          //   size: 28,
-                          // ),
-                          onPressed: null,
-                          icon: const SizedBox.shrink(),
-                        ),
+                        const SizedBox(width: 28),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -225,7 +217,7 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      widget.photoUrls[currentIndex] != null
+                                      widget.photoFiles[currentIndex] != null
                                           ? 'Foto Ulang'
                                           : 'Ambil Foto',
                                       style: const TextStyle(
@@ -280,7 +272,7 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
   }
 
   Widget _buildPhotoCard(int index) {
-    final photoUrl = widget.photoUrls[index];
+    final file = widget.photoFiles[index];
     final step = photoSteps[index];
 
     return Padding(
@@ -313,26 +305,19 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                  color:
-                      photoUrl != null ? Colors.green[300]! : Colors.grey[300]!,
+                  color: file != null ? Colors.green[300]! : Colors.grey[300]!,
                   width: 2,
                 ),
               ),
               child:
-                  photoUrl != null
+                  file != null
                       ? ClipRRect(
                         borderRadius: BorderRadius.circular(13),
-                        child: Image.network(
-                          photoUrl,
+                        child: Image.file(
+                          file,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return _buildPlaceholderPhoto(index, isError: true);
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
                           },
                         ),
                       )
@@ -346,31 +331,27 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: photoUrl != null ? Colors.green[50] : Colors.orange[50],
+              color: file != null ? Colors.green[50] : Colors.orange[50],
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color:
-                    photoUrl != null ? Colors.green[200]! : Colors.orange[200]!,
+                color: file != null ? Colors.green[200]! : Colors.orange[200]!,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  photoUrl != null ? Icons.check_circle : Icons.camera_alt,
+                  file != null ? Icons.check_circle : Icons.camera_alt,
                   size: 16,
-                  color:
-                      photoUrl != null ? Colors.green[700] : Colors.orange[700],
+                  color: file != null ? Colors.green[700] : Colors.orange[700],
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  photoUrl != null ? 'Foto Tersimpan' : 'Belum Difoto',
+                  file != null ? 'Foto Tersimpan' : 'Belum Difoto',
                   style: TextStyle(
                     fontSize: 12,
                     color:
-                        photoUrl != null
-                            ? Colors.green[700]
-                            : Colors.orange[700],
+                        file != null ? Colors.green[700] : Colors.orange[700],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -415,6 +396,7 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
   }
 
   bool _isAllPhotosComplete() {
-    return widget.photoUrls.every((url) => url != null);
+    return widget.photoFiles.every((file) => file != null);
   }
 }
+ 

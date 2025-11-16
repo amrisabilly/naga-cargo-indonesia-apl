@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cargo_app/screen/beranda/previewScreen.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class FotoWidget extends StatefulWidget {
   final String resi;
@@ -14,7 +16,9 @@ class FotoWidget extends StatefulWidget {
 class _FotoWidgetState extends State<FotoWidget> {
   int currentStep = 0;
   List<bool> photoTaken = List.filled(7, false);
-  List<String?> photoUrls = List.filled(7, null);
+  List<File?> photoFiles = List.filled(7, null);
+
+  final ImagePicker _picker = ImagePicker();
 
   final List<Map<String, dynamic>> photoSteps = [
     {
@@ -227,7 +231,7 @@ class _FotoWidgetState extends State<FotoWidget> {
                 const SizedBox(height: 15),
 
                 // Preview foto jika sudah ada
-                if (photoTaken[currentStep] && photoUrls[currentStep] != null)
+                if (photoTaken[currentStep] && photoFiles[currentStep] != null)
                   Expanded(
                     child: Container(
                       width: double.infinity,
@@ -240,8 +244,8 @@ class _FotoWidgetState extends State<FotoWidget> {
                         borderRadius: BorderRadius.circular(10),
                         child: Stack(
                           children: [
-                            Image.network(
-                              photoUrls[currentStep]!,
+                            Image.file(
+                              photoFiles[currentStep]!,
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
@@ -641,7 +645,7 @@ class _FotoWidgetState extends State<FotoWidget> {
         builder:
             (context) => FotoPreviewScreen(
               resi: widget.resi,
-              photoUrls: photoUrls,
+              photoFiles: photoFiles,
               onRetakePhoto: (index) {
                 setState(() {
                   currentStep = index;
@@ -653,40 +657,17 @@ class _FotoWidgetState extends State<FotoWidget> {
     );
   }
 
-  void _takePhoto() {
-    // Simulasi loading saat mengambil foto
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 15),
-                Text(
-                  'Mengambil foto...',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                ),
-              ],
-            ),
-          ),
+  Future<void> _takePhoto() async {
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
     );
-
-    // Simulasi delay mengambil foto
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pop(context);
-
+    if (pickedFile != null) {
       setState(() {
         photoTaken[currentStep] = true;
-        photoUrls[currentStep] =
-            'https://picsum.photos/400/600?random=${currentStep + 1}';
+        photoFiles[currentStep] = File(pickedFile.path);
       });
-    });
+    }
   }
 }
 
