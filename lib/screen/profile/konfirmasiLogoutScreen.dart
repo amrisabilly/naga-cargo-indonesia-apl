@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../controller/loginController.dart';
 
 class KonfirmasiLogoutDialog extends StatelessWidget {
   const KonfirmasiLogoutDialog({super.key});
@@ -28,9 +30,14 @@ class KonfirmasiLogoutDialog extends StatelessWidget {
           ),
         ),
         ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            context.go('/login');
+          onPressed: () async {
+            await context.read<LoginController>().logout();
+            if (context.mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/login',
+                (route) => false,
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4A90E2),

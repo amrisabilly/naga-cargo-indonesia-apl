@@ -17,8 +17,8 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const BerandaKurirScreen(),
     ),
     GoRoute(
-      path: '/riwayat',
-      builder: (context, state) => const RiwayatKurirScreen(),
+      path: '/riwayat_kurir',
+      builder: (context, state) => const RiwayatScreen(),
     ),
     GoRoute(
       path: '/profile',
