@@ -9,20 +9,25 @@ import 'package:go_router/go_router.dart';
 final GoRouter router = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
-    GoRoute(path: '/Login', builder: (context, state) => const LoginScreen()),
-    //GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
     GoRoute(
       path: '/beranda_kurir',
       builder: (context, state) => const BerandaKurirScreen(),
     ),
     GoRoute(
-      path: '/riwayat_kurir',
-      builder: (context, state) => const RiwayatScreen(),
-    ),
-    GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileKurirScreen(),
+    ),
+    GoRoute(
+      path: '/riwayat_kurir',
+      builder: (context, state) => const RiwayatScreen(),
     ),
     GoRoute(
       path: '/fotoScreen',

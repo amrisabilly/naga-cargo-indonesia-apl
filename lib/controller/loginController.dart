@@ -11,11 +11,13 @@ class LoginController extends ChangeNotifier {
   String _errorMessage = '';
   Map<String, dynamic>? _userData;
   String? _namaDaerah;
+  bool _isLoggedIn = false;
 
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   Map<String, dynamic>? get userData => _userData;
   String? get namaDaerah => _namaDaerah;
+  bool get isLoggedIn => _isLoggedIn;
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -69,11 +71,18 @@ class LoginController extends ChangeNotifier {
       if (userDataJson != null && isLoggedIn) {
         _userData = jsonDecode(userDataJson);
         _namaDaerah = namaDaerah;
+        _isLoggedIn = true;
         print('[DEBUG] Kurir user data dimuat dari SharedPreferences: ${_userData?['nama']}');
+        notifyListeners();
+      } else {
+        _isLoggedIn = false;
+        print('[DEBUG] Tidak ada data login sebelumnya');
         notifyListeners();
       }
     } catch (e) {
       print('[DEBUG] ERROR memuat kurir user data: $e');
+      _isLoggedIn = false;
+      notifyListeners();
     }
   }
 
@@ -84,14 +93,12 @@ class LoginController extends ChangeNotifier {
 
     if (usernameController.text.trim().isEmpty) {
       _errorMessage = 'Username tidak boleh kosong';
-      print('[DEBUG] ✗ Username kosong');
       notifyListeners();
       return;
     }
 
     if (passwordController.text.trim().isEmpty) {
       _errorMessage = 'Password tidak boleh kosong';
-      print('[DEBUG] ✗ Password kosong');
       notifyListeners();
       return;
     }
@@ -122,7 +129,7 @@ class LoginController extends ChangeNotifier {
       print('[DEBUG] ✓ Kredensial kurir valid');
 
       _userData = loginResult['user'];
-      _namaDaerah = loginResult['nama_daerah']; // Daerah kerja kurir
+      _namaDaerah = loginResult['nama_daerah'];
       
       print('[DEBUG] Kurir user data: $_userData');
       print('[DEBUG] Kurir nama daerah: $_namaDaerah');
@@ -192,6 +199,7 @@ class LoginController extends ChangeNotifier {
         print('[DEBUG] Step 5: Saving to SharedPreferences');
         await _saveUserData();
         
+        _isLoggedIn = true;
         _isLoading = false;
         notifyListeners();
         print('[DEBUG] ✓✓✓ KURIR LOGIN SUKSES!');
@@ -213,7 +221,7 @@ class LoginController extends ChangeNotifier {
         print('[DEBUG] Got: "$normalizedLokasiDaerah"');
         
         _errorMessage = 
-            'Akses ditolak!\n\nLokasi Anda: $lokasiDaerah\nDaerah kerja: $_namaDaerah.';
+            'Akses ditolak!\n\nLokasi Anda: $lokasiDaerah\nDaerah kerja: $_namaDaerah\n\nAnda hanya bisa login dari wilayah kerja yang sudah ditentukan.';
         _isLoading = false;
         _userData = null;
         _namaDaerah = null;
@@ -224,6 +232,7 @@ class LoginController extends ChangeNotifier {
       _errorMessage = 'Terjadi kesalahan: $e';
       _userData = null;
       _namaDaerah = null;
+      _isLoggedIn = false;
       notifyListeners();
       print('[DEBUG] ✗✗✗ ERROR Kurir Login: $e');
     }
@@ -240,6 +249,7 @@ class LoginController extends ChangeNotifier {
       
       _userData = null;
       _namaDaerah = null;
+      _isLoggedIn = false;
       usernameController.clear();
       passwordController.clear();
       _errorMessage = '';

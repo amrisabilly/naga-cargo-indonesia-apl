@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../controller/loginController.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,10 +26,31 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 4), () {
-      _controller.reverse().then((_) {
-        context.go('/login');
-      });
+    Future.delayed(const Duration(seconds: 4), () async {
+      // Load saved user data dari SharedPreferences
+      if (mounted) {
+        final loginController = context.read<LoginController>();
+        await loginController.loadSavedUserData();
+
+        if (mounted) {
+          // Cek apakah user sudah login
+          if (loginController.isLoggedIn) {
+            print('[DEBUG] User sudah login sebelumnya, navigasi ke beranda');
+            _controller.reverse().then((_) {
+              if (mounted) {
+                context.go('/beranda_kurir');
+              }
+            });
+          } else {
+            print('[DEBUG] User belum login, navigasi ke login screen');
+            _controller.reverse().then((_) {
+              if (mounted) {
+                context.go('/login');
+              }
+            });
+          }
+        }
+      }
     });
   }
 
