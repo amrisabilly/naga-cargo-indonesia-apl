@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cargo_app/screen/profile/profileScreen.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../controller/loginController.dart';
+import '../../controller/berandaController.dart';
 
 class BerandaKurirScreen extends StatefulWidget {
   const BerandaKurirScreen({super.key});
@@ -12,42 +15,43 @@ class BerandaKurirScreen extends StatefulWidget {
 class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  List<Map<String, String>> _searchResults = [];
 
-  // Data dummy hanya resi, alamat, dan status
-  final List<Map<String, String>> _dummyData = [
-    {
-      'resi': 'NC001234567',
-      'alamat': 'Jl. Merdeka No. 123, Surabaya',
-      'status': 'Siap Diambil',
-    },
-    {
-      'resi': 'NC001234568',
-      'alamat': 'Jl. Malioboro No. 45, Yogyakarta',
-      'status': 'Siap Diambil',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
+  }
+
+  void _loadInitialData() {
+    if (mounted) {
+      final loginController = context.read<LoginController>();
+      final berandaController = context.read<BerandaController>();
+      
+      if (loginController.userData?['id_user'] != null) {
+        berandaController.loadOrderByDaerah(
+          idKurir: loginController.userData?['id_user'] ?? 0,
+        );
+      }
+    }
+  }
 
   void _performSearch(String query) {
-    setState(() {
-      _isSearching = true;
+    if (mounted) {
+      final berandaController = context.read<BerandaController>();
+      
+      setState(() {
+        _isSearching = query.isNotEmpty;
+      });
+
       if (query.isNotEmpty) {
-        _searchResults =
-            _dummyData
-                .where(
-                  (item) =>
-                      item['resi']!.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                      item['alamat']!.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ),
-                )
-                .toList();
+        // Filter data yang sudah di-load, bukan search ke API
+        berandaController.filterOrders(query.trim());
       } else {
-        _searchResults = [];
+        berandaController.clearFilter();
       }
-    });
+    }
   }
 
   void _navigateToFoto(String resi) {
@@ -59,186 +63,196 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: Column(
-        children: [
-          // Header dengan gradient
-          Container(
-            height: screenHeight * 0.3,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
-              ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header info
-                    Row(
+      body: Consumer<LoginController>(
+        builder: (context, loginController, _) {
+          return Column(
+            children: [
+              // Header dengan gradient
+              Container(
+                height: screenHeight * 0.3,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            context.go('/profile');
-                          },
-                          child: const CircleAvatar(
-                            radius: 25,
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.person,
-                              color: Color(0xFF4A90E2),
-                              size: 30,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Selamat Datang,',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
+                        // Header info
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                context.go('/profile');
+                              },
+                              child: const CircleAvatar(
+                                radius: 25,
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Color(0xFF4A90E2),
+                                  size: 30,
                                 ),
                               ),
-                              Text(
-                                'Kurir Naga Cargo',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Selamat Datang,',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    loginController.userData?['nama'] ?? 'Kurir',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Search bar
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Search bar
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: _performSearch,
-                        decoration: InputDecoration(
-                          hintText: 'Cari nomor resi atau alamat...',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Color(0xFF4A90E2),
-                          ),
-                          suffixIcon:
-                              _searchController.text.isNotEmpty
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: _performSearch,
+                            decoration: InputDecoration(
+                              hintText: 'Cari nomor resi atau alamat...',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Color(0xFF4A90E2),
+                              ),
+                              suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() {
                                         _isSearching = false;
-                                        _searchResults = [];
                                       });
+                                      if (mounted) {
+                                        context.read<BerandaController>().clearFilter();
+                                      }
                                     },
                                     icon: const Icon(Icons.clear),
                                   )
                                   : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 15,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 15,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // Content area
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+              // Content area
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  transform: Matrix4.translationValues(0, -30, 0),
+                  child: _buildSearchContent(),
                 ),
               ),
-              transform: Matrix4.translationValues(0, -30, 0),
-              child: _buildSearchContent(),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildSearchContent() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          if (!_isSearching) ...[
-            Center(
-              child: Text(
-                'Pencarian Data Resi',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            SizedBox(height: 30),
-            Center(
-              child: Column(
-                children: [
-                  Icon(Icons.search, size: 80, color: Colors.grey[300]),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Ketik nomor resi atau alamat untuk mencari data pengiriman',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+    return Consumer<BerandaController>(
+      builder: (context, berandaController, child) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              if (!_isSearching) ...[
+                // Tampilkan pesan awal ketika belum search
+                Center(
+                  child: Text(
+                    'Pencarian Data Resi',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ] else ...[
-            Text(
-              'Hasil Pencarian (${_searchResults.length})',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Expanded(
-              child:
-                  _searchResults.isEmpty
+                ),
+                const SizedBox(height: 30),
+                Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.search, size: 80, color: Colors.grey[300]),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Ketik nomor resi atau alamat untuk mencari data pengiriman',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                // Tampilkan hasil filter sebagai rekomendasi
+                Text(
+                  'Rekomendasi (${berandaController.filteredOrders.length})',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Expanded(
+                  child: berandaController.filteredOrders.isEmpty
                       ? const Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -260,20 +274,22 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                         ),
                       )
                       : ListView.builder(
-                        itemCount: _searchResults.length,
+                        itemCount: berandaController.filteredOrders.length,
                         itemBuilder: (context, index) {
-                          final data = _searchResults[index];
+                          final data = berandaController.filteredOrders[index];
                           return _buildResiCard(data);
                         },
                       ),
-            ),
-          ],
-        ],
-      ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildResiCard(Map<String, String> data) {
+  Widget _buildResiCard(Map<String, dynamic> data) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -297,7 +313,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  data['resi']!,
+                  data['resi'] ?? 'N/A',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -315,7 +331,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                     border: Border.all(color: Colors.blue[200]!),
                   ),
                   child: Text(
-                    data['status']!,
+                    data['status'] ?? 'Proses',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.blue[700],
@@ -326,13 +342,13 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildInfoRow('Alamat', data['alamat']!),
+            _buildInfoRow('Alamat', data['alamat'] ?? 'N/A'),
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _navigateToFoto(data['resi']!);
+                  _navigateToFoto(data['resi'] ?? '');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4A90E2),
@@ -376,5 +392,11 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

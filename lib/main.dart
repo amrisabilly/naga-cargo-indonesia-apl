@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cargo_app/routes/router.dart';
 import 'controller/loginController.dart';
 import 'controller/profileController.dart';
+import 'controller/berandaController.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,13 +19,14 @@ class MainApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LoginController()),
         ChangeNotifierProvider(create: (_) => ProfileController()),
+        ChangeNotifierProvider(create: (_) => BerandaController()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerDelegate: router.routerDelegate,
         routeInformationParser: router.routeInformationParser,
-        theme: ThemeData(textTheme: GoogleFonts.soraTextTheme()),
         routeInformationProvider: router.routeInformationProvider,
+        theme: ThemeData(textTheme: GoogleFonts.soraTextTheme()),
       ),
     );
   }

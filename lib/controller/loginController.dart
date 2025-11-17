@@ -11,12 +11,14 @@ class LoginController extends ChangeNotifier {
   String _errorMessage = '';
   Map<String, dynamic>? _userData;
   String? _namaDaerah;
+  int? _idDaerah;
   bool _isLoggedIn = false;
 
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   Map<String, dynamic>? get userData => _userData;
   String? get namaDaerah => _namaDaerah;
+  int? get idDaerah => _idDaerah;
   bool get isLoggedIn => _isLoggedIn;
 
   final TextEditingController usernameController = TextEditingController();
@@ -27,6 +29,7 @@ class LoginController extends ChangeNotifier {
 
   static const String _userDataKey = 'kurir_user_data';
   static const String _namaDaerahKey = 'kurir_nama_daerah';
+  static const String _idDaerahKey = 'kurir_id_daerah';
   static const String _isLoggedInKey = 'kurir_is_logged_in';
 
   @override
@@ -51,6 +54,11 @@ class LoginController extends ChangeNotifier {
         await prefs.setString(_namaDaerahKey, _namaDaerah!);
         print('[DEBUG] Kurir nama daerah disimpan ke SharedPreferences');
       }
+
+      if (_idDaerah != null) {
+        await prefs.setInt(_idDaerahKey, _idDaerah!);
+        print('[DEBUG] Kurir id_daerah disimpan ke SharedPreferences: $_idDaerah');
+      }
       
       await prefs.setBool(_isLoggedInKey, true);
       print('[DEBUG] Kurir login status: true');
@@ -66,13 +74,16 @@ class LoginController extends ChangeNotifier {
       
       final userDataJson = prefs.getString(_userDataKey);
       final namaDaerah = prefs.getString(_namaDaerahKey);
+      final idDaerah = prefs.getInt(_idDaerahKey);
       final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
 
       if (userDataJson != null && isLoggedIn) {
         _userData = jsonDecode(userDataJson);
         _namaDaerah = namaDaerah;
+        _idDaerah = idDaerah;
         _isLoggedIn = true;
         print('[DEBUG] Kurir user data dimuat dari SharedPreferences: ${_userData?['nama']}');
+        print('[DEBUG] Kurir id_daerah dimuat: $_idDaerah');
         notifyListeners();
       } else {
         _isLoggedIn = false;
@@ -86,7 +97,7 @@ class LoginController extends ChangeNotifier {
     }
   }
 
-  /// Fungsi login utama untuk KURIR (dengan SharedPreferences)
+  /// Fungsi login utama untuk KURIR
   Future<void> login(BuildContext context) async {
     print('[DEBUG] === KURIR LOGIN DIMULAI ===');
     _errorMessage = '';
@@ -130,9 +141,9 @@ class LoginController extends ChangeNotifier {
 
       _userData = loginResult['user'];
       _namaDaerah = loginResult['nama_daerah'];
+      _idDaerah = loginResult['id_daerah']; // Ambil id_daerah dari response
       
-      print('[DEBUG] Kurir user data: $_userData');
-      print('[DEBUG] Kurir nama daerah: $_namaDaerah');
+      print('[DEBUG] Kurir: ${_userData?['nama']}, ID Daerah: $_idDaerah, Daerah: $_namaDaerah');
       notifyListeners();
 
       // 2. Dapatkan lokasi
@@ -146,6 +157,7 @@ class LoginController extends ChangeNotifier {
         _isLoading = false;
         _userData = null;
         _namaDaerah = null;
+        _idDaerah = null;
         print('[DEBUG] ✗ Location error: $_errorMessage');
         notifyListeners();
         return;
@@ -169,6 +181,7 @@ class LoginController extends ChangeNotifier {
         _isLoading = false;
         _userData = null;
         _namaDaerah = null;
+        _idDaerah = null;
         print('[DEBUG] ✗ Area error: $_errorMessage');
         notifyListeners();
         return;
@@ -225,6 +238,7 @@ class LoginController extends ChangeNotifier {
         _isLoading = false;
         _userData = null;
         _namaDaerah = null;
+        _idDaerah = null;
         notifyListeners();
       }
     } catch (e) {
@@ -232,6 +246,7 @@ class LoginController extends ChangeNotifier {
       _errorMessage = 'Terjadi kesalahan: $e';
       _userData = null;
       _namaDaerah = null;
+      _idDaerah = null;
       _isLoggedIn = false;
       notifyListeners();
       print('[DEBUG] ✗✗✗ ERROR Kurir Login: $e');
@@ -244,11 +259,13 @@ class LoginController extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userDataKey);
       await prefs.remove(_namaDaerahKey);
+      await prefs.remove(_idDaerahKey);
       await prefs.remove(_isLoggedInKey);
       print('[DEBUG] Kurir SharedPreferences cleared');
       
       _userData = null;
       _namaDaerah = null;
+      _idDaerah = null;
       _isLoggedIn = false;
       usernameController.clear();
       passwordController.clear();

@@ -37,28 +37,23 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         
-        // PENTING: Response format dari API adalah:
-        // {"message":"Login berhasil","user":{...},"nama_daerah":"Jakarta"}
-        // Jadi cek field 'message' bukan 'success'
-        
         if (data['message'] != null && data['message'].toString().toLowerCase().contains('berhasil')) {
           final user = data['user'] ?? {};
           final namaDaerah = data['nama_daerah'] ?? user['nama_daerah'] ?? 'Unknown';
+          final idDaerah = user['id_daerah']; // Ambil id_daerah dari user object
           
           print('[DEBUG] ✓ Kurir login API response success');
-          print('[DEBUG] User: ${user['nama']}, Daerah: $namaDaerah');
+          print('[DEBUG] User: ${user['nama']}, ID Daerah: $idDaerah, Daerah: $namaDaerah');
           
           return {
             'success': true,
             'message': 'Login berhasil',
             'user': user,
             'nama_daerah': namaDaerah,
+            'id_daerah': idDaerah,
           };
         } else {
-          // Jika message tidak berhasil
           final errorMsg = data['message'] ?? 'Username atau password salah';
-          print('[DEBUG] ✗ API returned non-success message: $errorMsg');
-          
           return {
             'success': false,
             'message': errorMsg,
