@@ -151,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 8),
                               TextFormField(
+                                textInputAction: TextInputAction.next,
                                 controller: loginController.usernameController,
                                 decoration: InputDecoration(
                                   hintText: 'Masukkan username Anda',

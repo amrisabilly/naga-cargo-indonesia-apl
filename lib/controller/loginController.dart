@@ -1,23 +1,31 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../services/auth_service.dart';
+import '../services/location_service.dart';
 
 class LoginController extends ChangeNotifier {
   bool _isLoading = false;
   String _errorMessage = '';
-
-  // Daftar wilayah kerja yang diizinkan
-  final List<String> _wilayahDiizinkan = ["Bantul", "Sleman"];
+  Map<String, dynamic>? _userData;
+  String? _namaDaerah;
 
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-  List<String> get wilayahDiizinkan => _wilayahDiizinkan;
+  Map<String, dynamic>? get userData => _userData;
+  String? get namaDaerah => _namaDaerah;
 
-  // Controllers untuk form
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final AuthService _authService = AuthService();
+  final LocationService _locationService = LocationService();
+
+  static const String _userDataKey = 'kurir_user_data';
+  static const String _namaDaerahKey = 'kurir_nama_daerah';
+  static const String _isLoggedInKey = 'kurir_is_logged_in';
 
   @override
   void dispose() {
@@ -26,210 +34,224 @@ class LoginController extends ChangeNotifier {
     super.dispose();
   }
 
-  // Fungsi untuk mendapatkan lokasi saat ini
-  Future<Position?> _getCurrentLocation() async {
+  /// Simpan user data ke SharedPreferences setelah login sukses
+  Future<void> _saveUserData() async {
     try {
-      // Cek apakah layanan lokasi aktif
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _errorMessage = 'Layanan lokasi tidak aktif. Silakan aktifkan GPS.';
-        notifyListeners();
-        return null;
+      final prefs = await SharedPreferences.getInstance();
+      
+      if (_userData != null) {
+        // Simpan user data sebagai JSON string
+        await prefs.setString(_userDataKey, jsonEncode(_userData));
+        print('[DEBUG] Kurir user data disimpan ke SharedPreferences');
       }
-
-      // Cek permission
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _errorMessage = 'Izin lokasi ditolak.';
-          notifyListeners();
-          return null;
-        }
+      
+      if (_namaDaerah != null) {
+        await prefs.setString(_namaDaerahKey, _namaDaerah!);
+        print('[DEBUG] Kurir nama daerah disimpan ke SharedPreferences');
       }
-
-      if (permission == LocationPermission.deniedForever) {
-        _errorMessage =
-            'Izin lokasi ditolak secara permanen. Silakan aktifkan di pengaturan.';
-        notifyListeners();
-        return null;
-      }
-
-      // Dapatkan posisi saat ini
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      return position;
+      
+      await prefs.setBool(_isLoggedInKey, true);
+      print('[DEBUG] Kurir login status: true');
     } catch (e) {
-      _errorMessage = 'Gagal mendapatkan lokasi: $e';
-      notifyListeners();
-      return null;
+      print('[DEBUG] ERROR menyimpan kurir user data: $e');
     }
   }
 
-  // Fungsi untuk memanggil API Nominatim
-  Future<Map<String, dynamic>?> _panggilAPINominatim(
-    double lat,
-    double lon,
-  ) async {
+  /// Ambil user data dari SharedPreferences saat app startup
+  Future<void> loadSavedUserData() async {
     try {
-      final url =
-          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon&zoom=10&addressdetails=1';
+      final prefs = await SharedPreferences.getInstance();
+      
+      final userDataJson = prefs.getString(_userDataKey);
+      final namaDaerah = prefs.getString(_namaDaerahKey);
+      final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'User-Agent': 'NagaCargoApp/1.0', // Nominatim memerlukan User-Agent
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        _errorMessage = 'Gagal mendapatkan informasi lokasi dari server.';
+      if (userDataJson != null && isLoggedIn) {
+        _userData = jsonDecode(userDataJson);
+        _namaDaerah = namaDaerah;
+        print('[DEBUG] Kurir user data dimuat dari SharedPreferences: ${_userData?['nama']}');
         notifyListeners();
-        return null;
       }
     } catch (e) {
-      _errorMessage = 'Error koneksi: $e';
-      notifyListeners();
-      return null;
+      print('[DEBUG] ERROR memuat kurir user data: $e');
     }
   }
 
-  // Fungsi utama untuk cek akses kurir
-  Future<bool> cekAksesKurir(double lat, double lon) async {
-    try {
-      // 1. Panggil API Nominatim
-      Map<String, dynamic>? responsAPI = await _panggilAPINominatim(lat, lon);
-
-      if (responsAPI == null) {
-        return false; // Gagal mendapatkan data lokasi
-      }
-
-      // 2. Ekstraksi nama kabupaten (county)
-      String? namaKabupatenKurir;
-
-      if (responsAPI['address'] != null &&
-          responsAPI['address']['county'] != null) {
-        namaKabupatenKurir = responsAPI['address']['county'].toString();
-      } else {
-        _errorMessage = 'Tidak dapat menentukan wilayah kerja Anda.';
-        notifyListeners();
-        return false;
-      }
-
-      // 3. Lakukan pengecekan
-      bool aksesDisetujui = _wilayahDiizinkan.contains(namaKabupatenKurir);
-
-      if (!aksesDisetujui) {
-        _errorMessage =
-            'Akses ditolak. Anda berada di wilayah $namaKabupatenKurir. '
-            'Akses hanya diizinkan untuk wilayah: ${_wilayahDiizinkan.join(", ")}';
-        notifyListeners();
-      }
-
-      return aksesDisetujui;
-    } catch (e) {
-      _errorMessage = 'Error saat mengecek akses: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Fungsi login utama
+  /// Fungsi login utama untuk KURIR (dengan SharedPreferences)
   Future<void> login(BuildContext context) async {
-    // Reset error message
+    print('[DEBUG] === KURIR LOGIN DIMULAI ===');
     _errorMessage = '';
 
-    // Validasi input
     if (usernameController.text.trim().isEmpty) {
       _errorMessage = 'Username tidak boleh kosong';
+      print('[DEBUG] ✗ Username kosong');
       notifyListeners();
       return;
     }
 
     if (passwordController.text.trim().isEmpty) {
       _errorMessage = 'Password tidak boleh kosong';
+      print('[DEBUG] ✗ Password kosong');
       notifyListeners();
       return;
     }
 
     _isLoading = true;
     notifyListeners();
+    print('[DEBUG] Loading: true');
 
     try {
-      // 1. Validasi kredensial (simulasi - ganti dengan API real)
-      bool kredensialValid = await _validasiKredensial(
-        usernameController.text.trim(),
-        passwordController.text.trim(),
+      // 1. Validasi kredensial kurir
+      print('[DEBUG] Step 1: Calling AuthService.loginKurir()');
+      
+      final loginResult = await _authService.loginKurir(
+        username: usernameController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
-      if (!kredensialValid) {
-        _errorMessage = 'Username atau password salah';
+      print('[DEBUG] LoginResult: $loginResult');
+
+      if (!loginResult['success']) {
+        _errorMessage = loginResult['message'];
         _isLoading = false;
+        print('[DEBUG] ✗ Kurir login failed: $_errorMessage');
         notifyListeners();
         return;
       }
 
-      // 2. Dapatkan lokasi saat ini
-      Position? position = await _getCurrentLocation();
-      if (position == null) {
-        _isLoading = false;
-        return; // Error message sudah di-set di _getCurrentLocation
-      }
+      print('[DEBUG] ✓ Kredensial kurir valid');
 
-      // 3. Cek akses kurir berdasarkan lokasi
-      bool aksesDisetujui = await cekAksesKurir(
-        position.latitude,
-        position.longitude,
-      );
-
-      _isLoading = false;
+      _userData = loginResult['user'];
+      _namaDaerah = loginResult['nama_daerah']; // Daerah kerja kurir
+      
+      print('[DEBUG] Kurir user data: $_userData');
+      print('[DEBUG] Kurir nama daerah: $_namaDaerah');
       notifyListeners();
 
-      if (aksesDisetujui) {
-        // Login berhasil, navigasi ke beranda
-        if (context.mounted) {
-          context.go('/beranda');
-        }
+      // 2. Dapatkan lokasi
+      print('[DEBUG] Step 2: Getting current location');
+      
+      final locationResult = await _locationService.getCurrentLocation();
+      print('[DEBUG] Location result: $locationResult');
+      
+      if (!locationResult['success']) {
+        _errorMessage = locationResult['message'];
+        _isLoading = false;
+        _userData = null;
+        _namaDaerah = null;
+        print('[DEBUG] ✗ Location error: $_errorMessage');
+        notifyListeners();
+        return;
       }
-      // Jika akses ditolak, error message sudah di-set di cekAksesKurir
+
+      Position position = locationResult['position'];
+      print('[DEBUG] ✓ Location: ${position.latitude}, ${position.longitude}');
+
+      // 3. Dapatkan nama daerah dari koordinat GPS
+      print('[DEBUG] Step 3: Getting area from coordinates');
+      
+      final areaResult = await _locationService.getAreaFromCoordinates(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      print('[DEBUG] Area result: $areaResult');
+
+      if (!areaResult['success']) {
+        _errorMessage = areaResult['message'];
+        _isLoading = false;
+        _userData = null;
+        _namaDaerah = null;
+        print('[DEBUG] ✗ Area error: $_errorMessage');
+        notifyListeners();
+        return;
+      }
+
+      String lokasiDaerah = areaResult['area_name'];
+      print('[DEBUG] ✓ Area: $lokasiDaerah');
+
+      // 4. Bandingkan lokasi GPS dengan daerah kerja kurir
+      print('[DEBUG] Step 4: Comparing location');
+      print('[DEBUG] Lokasi GPS: $lokasiDaerah vs Daerah kerja kurir: $_namaDaerah');
+      print('[DEBUG] Lokasi GPS (lowercase): ${lokasiDaerah.toLowerCase()}');
+      print('[DEBUG] Daerah kerja (lowercase): ${_namaDaerah?.toLowerCase()}');
+      
+      // Normalisasi nama daerah (hapus extra spaces)
+      String normalizedLokasiDaerah = lokasiDaerah.toLowerCase().trim();
+      String normalizedNamaDaerah = _namaDaerah?.toLowerCase().trim() ?? '';
+      
+      print('[DEBUG] Normalized Lokasi GPS: "$normalizedLokasiDaerah"');
+      print('[DEBUG] Normalized Daerah kerja: "$normalizedNamaDaerah"');
+      print('[DEBUG] Are they equal? ${normalizedLokasiDaerah == normalizedNamaDaerah}');
+      
+      if (normalizedLokasiDaerah == normalizedNamaDaerah) {
+        
+        print('[DEBUG] ✓ Lokasi sesuai!');
+        
+        // SIMPAN DATA KE SHAREDPREFERENCES
+        print('[DEBUG] Step 5: Saving to SharedPreferences');
+        await _saveUserData();
+        
+        _isLoading = false;
+        notifyListeners();
+        print('[DEBUG] ✓✓✓ KURIR LOGIN SUKSES!');
+        print('[DEBUG] Kurir: ${_userData?['nama']}, Daerah: $_namaDaerah');
+        
+        // PENTING: Wait sebentar agar notifyListeners propagate
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        // NAVIGASI ke beranda kurir
+        if (context.mounted) {
+          print('[DEBUG] Calling context.go(/beranda_kurir)');
+          context.go('/beranda_kurir');
+        } else {
+          print('[DEBUG] ✗ Context not mounted!');
+        }
+      } else {
+        print('[DEBUG] ✗ Lokasi TIDAK SESUAI!');
+        print('[DEBUG] Expected: "$normalizedNamaDaerah"');
+        print('[DEBUG] Got: "$normalizedLokasiDaerah"');
+        
+        _errorMessage = 
+            'Akses ditolak!\n\nLokasi Anda: $lokasiDaerah\nDaerah kerja: $_namaDaerah.';
+        _isLoading = false;
+        _userData = null;
+        _namaDaerah = null;
+        notifyListeners();
+      }
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Terjadi kesalahan: $e';
+      _userData = null;
+      _namaDaerah = null;
       notifyListeners();
+      print('[DEBUG] ✗✗✗ ERROR Kurir Login: $e');
     }
   }
 
-  // Simulasi validasi kredensial (ganti dengan API real)
-  Future<bool> _validasiKredensial(String username, String password) async {
-    // Simulasi delay network
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Untuk demo, anggap username = "kurir" dan password = "123"
-    // Ganti dengan panggilan API real
-    return username == "kurir" && password == "123";
+  /// Logout dan hapus semua data kurir
+  Future<void> logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_userDataKey);
+      await prefs.remove(_namaDaerahKey);
+      await prefs.remove(_isLoggedInKey);
+      print('[DEBUG] Kurir SharedPreferences cleared');
+      
+      _userData = null;
+      _namaDaerah = null;
+      usernameController.clear();
+      passwordController.clear();
+      _errorMessage = '';
+      notifyListeners();
+    } catch (e) {
+      print('[DEBUG] ERROR kurir logout: $e');
+    }
   }
 
-  // Fungsi untuk clear error
+  /// Clear error message
   void clearError() {
     _errorMessage = '';
-    notifyListeners();
-  }
-
-  // Fungsi untuk menambah wilayah diizinkan (untuk admin)
-  void tambahWilayahDiizinkan(String wilayah) {
-    if (!_wilayahDiizinkan.contains(wilayah)) {
-      _wilayahDiizinkan.add(wilayah);
-      notifyListeners();
-    }
-  }
-
-  // Fungsi untuk menghapus wilayah diizinkan (untuk admin)
-  void hapusWilayahDiizinkan(String wilayah) {
-    _wilayahDiizinkan.remove(wilayah);
     notifyListeners();
   }
 }

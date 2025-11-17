@@ -13,7 +13,7 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/Login', builder: (context, state) => const LoginScreen()),
     //GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
-      path: '/beranda',
+      path: '/beranda_kurir',
       builder: (context, state) => const BerandaKurirScreen(),
     ),
     GoRoute(
