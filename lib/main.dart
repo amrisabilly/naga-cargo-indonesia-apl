@@ -5,6 +5,7 @@ import 'package:cargo_app/routes/router.dart';
 import 'controller/loginController.dart';
 import 'controller/profileController.dart';
 import 'controller/berandaController.dart';
+import 'controller/fotoController.dart';
 
 void main() {
   runApp(const MainApp());
@@ -20,6 +21,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginController()),
         ChangeNotifierProvider(create: (_) => ProfileController()),
         ChangeNotifierProvider(create: (_) => BerandaController()),
+        ChangeNotifierProvider(create: (_) => FotoController()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

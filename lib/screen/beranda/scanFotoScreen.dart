@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cargo_app/screen/beranda/previewFotoScreen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../controller/fotoController.dart';
+import '../../controller/loginController.dart';
+import 'package:go_router/go_router.dart';
 
 class FotoWidget extends StatefulWidget {
   final String resi;
@@ -19,6 +23,17 @@ class _FotoWidgetState extends State<FotoWidget> {
   List<File?> photoFiles = List.filled(7, null);
 
   final ImagePicker _picker = ImagePicker();
+
+  // Deskripsi untuk setiap foto
+  final List<String> photoDescriptions = [
+    'Tampak Keseluruhan',
+    'Label Alamat',
+    'Nomor Resi',
+    'Kondisi Kemasan',
+    'Tanda Tangan Penerima',
+    'Identitas Penerima',
+    'Dokumentasi Serah Terima',
+  ];
 
   final List<Map<String, dynamic>> photoSteps = [
     {
@@ -396,7 +411,7 @@ class _FotoWidgetState extends State<FotoWidget> {
             if (photoTaken[currentStep])
               Expanded(
                 child: ElevatedButton(
-                  onPressed: currentStep < 6 ? _goToNextStep : _showPreview,
+                  onPressed: currentStep < 6 ? _goToNextStep : _submitPhotos,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
@@ -408,7 +423,7 @@ class _FotoWidgetState extends State<FotoWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        currentStep < 6 ? 'Selanjutnya' : 'Selesai',
+                        currentStep < 6 ? 'Selanjutnya' : 'Upload Foto',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -417,7 +432,9 @@ class _FotoWidgetState extends State<FotoWidget> {
                       ),
                       const SizedBox(width: 4),
                       Icon(
-                        currentStep < 6 ? Icons.arrow_forward_ios : Icons.check,
+                        currentStep < 6
+                            ? Icons.arrow_forward_ios
+                            : Icons.cloud_upload,
                         color: Colors.white,
                         size: 14,
                       ),
@@ -455,7 +472,7 @@ class _FotoWidgetState extends State<FotoWidget> {
                   currentStep = index;
                 });
               },
-              onComplete: widget.onComplete,
+              onComplete: _submitPhotos,
             ),
       ),
     );
@@ -472,5 +489,113 @@ class _FotoWidgetState extends State<FotoWidget> {
         photoFiles[currentStep] = File(pickedFile.path);
       });
     }
+  }
+
+  /// Submit foto dan update order ke API
+  Future<void> _submitPhotos() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  const Text('Mengunggah foto dokumentasi...'),
+                ],
+              ),
+            ),
+          ),
+    );
+
+    try {
+      final fotoController = context.read<FotoController>();
+      final loginController = context.read<LoginController>();
+
+      // Step 1: Update order dulu
+      print('[DEBUG] Step 1: Updating order...');
+      final updateSuccess = await fotoController.updateOrder(
+        awb: widget.resi,
+        idKurir: loginController.userData?['id_user'] ?? 0,
+        tanggal: DateTime.now().toString().split(' ')[0],
+        penerima: 'Penerima', // TODO: Get dari data order jika ada
+        noHp: '0', // TODO: Get dari form input jika diperlukan
+      );
+
+      if (!updateSuccess) {
+        if (mounted) {
+          Navigator.of(context).pop(); // Close loading dialog
+          _showErrorDialog(fotoController.errorMessage);
+        }
+        return;
+      }
+
+      // Step 2: Upload foto
+      print('[DEBUG] Step 2: Uploading photos...');
+      final uploadSuccess = await fotoController.uploadFoto(
+        awb: widget.resi,
+        photoFiles: photoFiles,
+        photoDescriptions: photoDescriptions,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        if (uploadSuccess) {
+          _showSuccessDialog(fotoController.successMessage);
+        } else {
+          _showErrorDialog(fotoController.errorMessage);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        _showErrorDialog('Error: $e');
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Sukses'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Close FotoKurirScreen
+                  context.go('/beranda_kurir'); // Navigate to beranda
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
   }
 }
