@@ -299,29 +299,36 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
 
           // Photo container
           Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: file != null ? Colors.green[300]! : Colors.grey[300]!,
-                  width: 2,
+            child: GestureDetector(
+              onTap: file != null ? () => _showFullscreenPhoto(file) : null,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color:
+                        file != null ? Colors.green[300]! : Colors.grey[300]!,
+                    width: 2,
+                  ),
                 ),
+                child:
+                    file != null
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(13),
+                          child: Image.file(
+                            file,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildPlaceholderPhoto(
+                                index,
+                                isError: true,
+                              );
+                            },
+                          ),
+                        )
+                        : _buildPlaceholderPhoto(index),
               ),
-              child:
-                  file != null
-                      ? ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
-                        child: Image.file(
-                          file,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildPlaceholderPhoto(index, isError: true);
-                          },
-                        ),
-                      )
-                      : _buildPlaceholderPhoto(index),
             ),
           ),
 
@@ -395,8 +402,54 @@ class _FotoPreviewScreenState extends State<FotoPreviewScreen> {
     );
   }
 
+  void _showFullscreenPhoto(File file) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              children: [
+                // Foto fullscreen
+                Center(
+                  child: InteractiveViewer(
+                    child: Image.file(
+                      file,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                ),
+                // Tombol close
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   bool _isAllPhotosComplete() {
     return widget.photoFiles.every((file) => file != null);
   }
 }
- 

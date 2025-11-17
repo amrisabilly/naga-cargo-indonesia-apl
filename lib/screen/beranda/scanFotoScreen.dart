@@ -23,8 +23,7 @@ class _FotoWidgetState extends State<FotoWidget> {
   final List<Map<String, dynamic>> photoSteps = [
     {
       'title': 'Tampak Keseluruhan',
-      'description':
-          'Pastikan seluruh barang tampak jelas seperti contoh di bawah.',
+      'description': 'Pastikan agar pengambilan foto mode landscape (miring).',
       'image': 'assets/images/keseluruhan.jpg',
     },
     {
