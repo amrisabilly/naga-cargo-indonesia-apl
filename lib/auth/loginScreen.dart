@@ -21,58 +21,60 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return ChangeNotifierProvider(
       create: (context) => LoginController(),
       child: Scaffold(
-        backgroundColor: Colors.white,
-        resizeToAvoidBottomInset: false,
+        backgroundColor: const Color(0xFF4A90E2),
+        resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
-            Column(
-              children: [
-                // Bagian atas dengan tulisan "Login"
-                Container(
-                  height: screenHeight * 0.20,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
-                    ),
-                  ),
-                  child: SafeArea(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            // Background gradient - Fixed
+            Container(
+              height: screenHeight,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
                 ),
-
-                // Konten utama
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 70),
+                    const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    transform: Matrix4.translationValues(0, -30, 0),
+                  ],
+                ),
+              ),
+            ),
+
+            // Container putih yang bisa scroll naik-turun
+            DraggableScrollableSheet(
+              initialChildSize: 0.73,
+              minChildSize: 0.73,
+              maxChildSize: 1.0,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    physics: const ClampingScrollPhysics(),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 30.0,
@@ -85,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 40),
-                              Center(
+                              const Center(
                                 child: Text(
                                   'Selamat Datang!',
                                   style: TextStyle(
@@ -96,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Center(
+                              const Center(
                                 child: Text(
                                   'Silakan masuk ke akun Anda',
                                   style: TextStyle(
@@ -140,7 +142,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ],
                                   ),
                                 ),
-                              SizedBox(height: 20),
+
+                              const SizedBox(height: 40),
+
                               const Text(
                                 'Username',
                                 style: TextStyle(
@@ -182,7 +186,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: loginController.passwordController,
+                                textInputAction: TextInputAction.done,
                                 obscureText: _obscurePassword,
+                                onFieldSubmitted: (_) {
+                                  if (!loginController.isLoading) {
+                                    loginController.login(context);
+                                  }
+                                },
                                 decoration: InputDecoration(
                                   hintText: 'Masukkan password Anda',
                                   filled: true,
@@ -206,61 +216,55 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              // Spacer agar konten tidak menabrak tombol bawah
-                              const Spacer(),
-                              const SizedBox(height: 80),
+
+                              const SizedBox(height: 50),
+
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      loginController.isLoading
+                                          ? null
+                                          : () =>
+                                              loginController.login(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4A90E2),
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child:
+                                      loginController.isLoading
+                                          ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                          : const Text(
+                                            'Masuk',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 40),
                             ],
                           );
                         },
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Positioned(
-              left: 30,
-              right: 30,
-              bottom: 220,
-              child: Consumer<LoginController>(
-                builder: (context, loginController, child) {
-                  return SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed:
-                          loginController.isLoading
-                              ? null
-                              : () => loginController.login(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A90E2),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child:
-                          loginController.isLoading
-                              ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text(
-                                'Masuk',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                    ),
-                  );
-                },
-              ),
+                );
+              },
             ),
           ],
         ),
