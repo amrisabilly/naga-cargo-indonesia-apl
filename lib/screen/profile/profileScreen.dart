@@ -51,7 +51,20 @@ class _ProfileKurirScreenState extends State<ProfileKurirScreen> {
                         Row(
                           children: [
                             IconButton(
-                              onPressed: () => context.go('/beranda_kurir'),
+                              onPressed: () {
+                                try {
+                                  // Try pop first (jika ada rute sebelumnya)
+                                  if (Navigator.of(context).canPop()) {
+                                    Navigator.of(context).pop();
+                                  } else {
+                                    // Jika tidak bisa pop, gunakan GoRouter
+                                    context.go('/beranda_kurir');
+                                  }
+                                } catch (e) {
+                                  print('[DEBUG] Error navigating back: $e');
+                                  context.go('/beranda_kurir');
+                                }
+                              },
                               icon: const Icon(
                                 Icons.arrow_back,
                                 color: Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../controller/profileController.dart';
 
 class RiwayatScreen extends StatefulWidget {
@@ -27,7 +28,18 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            try {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go('/profile');
+              }
+            } catch (e) {
+              print('[DEBUG] Error navigating back: $e');
+              context.go('/profile');
+            }
+          },
         ),
         title: const Text(
           'Riwayat Pengiriman',

@@ -44,7 +44,18 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () => context.go('/beranda'),
+                          onPressed: () {
+                            try {
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop();
+                              } else {
+                                context.go('/beranda_kurir');
+                              }
+                            } catch (e) {
+                              print('[DEBUG] Error navigating back: $e');
+                              context.go('/beranda_kurir');
+                            }
+                          },
                           icon: const Icon(
                             Icons.arrow_back,
                             color: Colors.white,
