@@ -523,8 +523,6 @@ class _FotoWidgetState extends State<FotoWidget> {
         awb: widget.resi,
         idKurir: loginController.userData?['id_user'] ?? 0,
         tanggal: DateTime.now().toString().split(' ')[0],
-        penerima: 'Penerima', // TODO: Get dari data order jika ada
-        noHp: '0', // TODO: Get dari form input jika diperlukan
       );
 
       if (!updateSuccess) {
@@ -581,21 +579,30 @@ class _FotoWidgetState extends State<FotoWidget> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Sukses'),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pop(); // Close FotoKurirScreen
-                  context.go('/beranda_kurir'); // Navigate to beranda
-                },
-                child: const Text('OK'),
-              ),
-            ],
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Sukses'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              print('[DEBUG] Success dialog OK clicked');
+              
+              // Close dialog saja
+              Navigator.of(dialogContext).pop();
+              
+              // Delay untuk ensure dialog sudah fully closed
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (mounted) {
+                  print('[DEBUG] Navigating to beranda');
+                  // Gunakan GoRouter untuk navigate, jangan Navigator.pop()
+                  context.go('/beranda_kurir');
+                }
+              });
+            },
+            child: const Text('OK'),
           ),
+        ],
+      ),
     );
   }
 }

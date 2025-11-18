@@ -20,8 +20,6 @@ class FotoController extends ChangeNotifier {
     required String awb,
     required int idKurir,
     required String tanggal,
-    required String penerima,
-    required String noHp,
   }) async {
     _isUploading = true;
     _errorMessage = '';
@@ -32,7 +30,7 @@ class FotoController extends ChangeNotifier {
       final url = '$_baseUrl/KURIR/update-order';
 
       print('[DEBUG] Updating order from: $url');
-      print('[DEBUG] Payload - AWB: $awb, ID Kurir: $idKurir, Penerima: $penerima');
+      print('[DEBUG] Payload - AWB: $awb, ID Kurir: $idKurir, Tanggal: $tanggal');
 
       final response = await http.post(
         Uri.parse(url),
@@ -44,8 +42,6 @@ class FotoController extends ChangeNotifier {
           'AWB': awb,
           'id_kurir': idKurir,
           'tanggal': tanggal,
-          'penerima': penerima,
-          'no_hp': noHp,
         }),
       ).timeout(
         const Duration(seconds: 15),
