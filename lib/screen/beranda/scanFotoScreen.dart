@@ -6,6 +6,10 @@ import 'package:provider/provider.dart';
 import '../../controller/fotoController.dart';
 import '../../controller/loginController.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:gal/gal.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 
 class FotoWidget extends StatefulWidget {
   final String resi;
@@ -478,15 +482,27 @@ class _FotoWidgetState extends State<FotoWidget> {
     );
   }
 
+  Future<File?> compressImage(File file) async {
+    final result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      file.absolute.path + '.webp',
+      quality: 70, // Atur sesuai kebutuhan
+      format: CompressFormat.webp,
+    );
+    return result != null ? File(result.path) : null;
+  }
+
   Future<void> _takePhoto() async {
     final pickedFile = await _picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 85,
     );
     if (pickedFile != null) {
+      // Kompres gambar sebelum disimpan
+      File? compressed = await compressImage(File(pickedFile.path));
       setState(() {
         photoTaken[currentStep] = true;
-        photoFiles[currentStep] = File(pickedFile.path);
+        photoFiles[currentStep] = compressed ?? File(pickedFile.path);
       });
     }
   }
@@ -541,6 +557,9 @@ class _FotoWidgetState extends State<FotoWidget> {
         photoDescriptions: photoDescriptions,
       );
 
+      // Step 3: Simpan ke galeri HP user
+      await _savePhotosToGallery();
+
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
 
@@ -554,6 +573,30 @@ class _FotoWidgetState extends State<FotoWidget> {
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
         _showErrorDialog('Error: $e');
+      }
+    }
+  }
+
+  Future<void> _savePhotosToGallery() async {
+    // Minta permission storage
+    var status = await Permission.photos.request();
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+    if (!status.isGranted) {
+      print('Permission not granted');
+      return;
+    }
+
+    for (int i = 0; i < photoFiles.length; i++) {
+      final file = photoFiles[i];
+      if (file != null && await file.exists()) {
+        try {
+          await Gal.putImage(file.path, album: 'CargoApp');
+          print('Berhasil simpan ke galeri');
+        } catch (e) {
+          print('Gagal simpan ke galeri: $e');
+        }
       }
     }
   }
@@ -579,30 +622,31 @@ class _FotoWidgetState extends State<FotoWidget> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('Sukses'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              print('[DEBUG] Success dialog OK clicked');
-              
-              // Close dialog saja
-              Navigator.of(dialogContext).pop();
-              
-              // Delay untuk ensure dialog sudah fully closed
-              Future.delayed(const Duration(milliseconds: 300), () {
-                if (mounted) {
-                  print('[DEBUG] Navigating to beranda');
-                  // Gunakan GoRouter untuk navigate, jangan Navigator.pop()
-                  context.go('/beranda_kurir');
-                }
-              });
-            },
-            child: const Text('OK'),
+      builder:
+          (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Sukses'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  print('[DEBUG] Success dialog OK clicked');
+
+                  // Close dialog saja
+                  Navigator.of(dialogContext).pop();
+
+                  // Delay untuk ensure dialog sudah fully closed
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      print('[DEBUG] Navigating to beranda');
+                      // Gunakan GoRouter untuk navigate, jangan Navigator.pop()
+                      context.go('/beranda_kurir');
+                    }
+                  });
+                },
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

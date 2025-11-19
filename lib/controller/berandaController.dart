@@ -4,7 +4,8 @@ import 'dart:convert';
 
 class BerandaController extends ChangeNotifier {
   List<Map<String, dynamic>> _allOrders = []; // Semua data AWB daerah
-  List<Map<String, dynamic>> _filteredOrders = []; // Data yang di-filter saat user mengetik
+  List<Map<String, dynamic>> _filteredOrders =
+      []; // Data yang di-filter saat user mengetik
   bool _isLoadingOrders = false;
   String _errorMessage = '';
 
@@ -16,30 +17,30 @@ class BerandaController extends ChangeNotifier {
   static const String _baseUrl = 'https://monitoringweb.decoratics.id/api';
 
   /// Load semua order berdasarkan daerah kurir saat buka Beranda
-  Future<void> loadOrderByDaerah({
-    required int idKurir,
-  }) async {
+  Future<void> loadOrderByDaerah({required int idKurir}) async {
     _isLoadingOrders = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
       final url = '$_baseUrl/KURIR/order-by-daerah?id_kurir=$idKurir';
-      
+
       print('[DEBUG] Loading all orders from: $url');
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'NagaCargoApp/1.0',
-        },
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception('Request timeout');
-        },
-      );
+      final response = await http
+          .get(
+            Uri.parse(url),
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'NagaCargoApp/1.0',
+            },
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw Exception('Request timeout');
+            },
+          );
 
       print('[DEBUG] Order by daerah response status: ${response.statusCode}');
       print('[DEBUG] Order by daerah response body: ${response.body}');
@@ -47,17 +48,18 @@ class BerandaController extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final orders = data['orders'] as List? ?? [];
-        
-        _allOrders = orders.map<Map<String, dynamic>>((order) {
-          return {
-            'resi': order['AWB'] ?? 'N/A',
-            'alamat': order['tujuan'] ?? 'Alamat tidak tersedia',
-            'penerima': order['penerima'] ?? 'Penerima tidak tersedia',
-            'status': order['status'] ?? 'Proses',
-            'full_data': order,
-          };
-        }).toList();
-        
+
+        _allOrders =
+            orders.map<Map<String, dynamic>>((order) {
+              return {
+                'resi': order['AWB'] ?? 'N/A',
+                'alamat': order['tujuan'] ?? 'Alamat tidak tersedia',
+                'penerima': order['penerima'] ?? 'Penerima tidak tersedia',
+                'status': order['status'] ?? 'Proses',
+                'full_data': order,
+              };
+            }).toList();
+
         print('[DEBUG] ✓ All orders loaded: ${_allOrders.length} orders');
       } else if (response.statusCode == 404) {
         _errorMessage = 'Kurir tidak ditemukan';
@@ -87,13 +89,14 @@ class BerandaController extends ChangeNotifier {
     }
 
     final lowerQuery = query.toLowerCase();
-    
-    _filteredOrders = _allOrders.where((order) {
-      final resi = order['resi'].toString().toLowerCase();
-      final alamat = order['alamat'].toString().toLowerCase();
-      
-      return resi.contains(lowerQuery) || alamat.contains(lowerQuery);
-    }).toList();
+
+    _filteredOrders =
+        _allOrders.where((order) {
+          final resi = order['resi'].toString().toLowerCase();
+          final alamat = order['alamat'].toString().toLowerCase();
+
+          return resi.contains(lowerQuery) || alamat.contains(lowerQuery);
+        }).toList();
 
     print('[DEBUG] Filtered orders: ${_filteredOrders.length} results');
     notifyListeners();

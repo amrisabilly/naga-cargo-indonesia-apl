@@ -80,13 +80,13 @@ class _SplashScreenState extends State<SplashScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
-                      'assets/images/naga_cargo.png',
+                      'assets/images/logo.png',
                       width: 120,
                       height: 120,
                     ),
                     const SizedBox(height: 24),
                     const Text(
-                      "Sistem Manajemen BAST",
+                      "Sistem Manajemen BAST Kurir",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

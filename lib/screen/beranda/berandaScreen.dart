@@ -28,19 +28,27 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
     if (mounted) {
       final loginController = context.read<LoginController>();
       final berandaController = context.read<BerandaController>();
-      
-      if (loginController.userData?['id_user'] != null) {
-        berandaController.loadOrderByDaerah(
-          idKurir: loginController.userData?['id_user'] ?? 0,
+
+      final idKurir = loginController.userData?['id_user'];
+      if (idKurir == null || idKurir == 0) {
+        // Tampilkan pesan error: "ID Kurir tidak valid, silakan login ulang."
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ID Kurir tidak valid, silakan login ulang.'),
+            backgroundColor: Colors.red,
+          ),
         );
+        return;
       }
+
+      berandaController.loadOrderByDaerah(idKurir: idKurir);
     }
   }
 
   void _performSearch(String query) {
     if (mounted) {
       final berandaController = context.read<BerandaController>();
-      
+
       setState(() {
         _isSearching = query.isNotEmpty;
       });
@@ -114,7 +122,8 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                                     ),
                                   ),
                                   Text(
-                                    loginController.userData?['nama'] ?? 'Kurir',
+                                    loginController.userData?['nama'] ??
+                                        'Kurir',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -153,20 +162,23 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                                 Icons.search,
                                 color: Color(0xFF4A90E2),
                               ),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {
-                                        _isSearching = false;
-                                      });
-                                      if (mounted) {
-                                        context.read<BerandaController>().clearFilter();
-                                      }
-                                    },
-                                    icon: const Icon(Icons.clear),
-                                  )
-                                  : null,
+                              suffixIcon:
+                                  _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() {
+                                            _isSearching = false;
+                                          });
+                                          if (mounted) {
+                                            context
+                                                .read<BerandaController>()
+                                                .clearFilter();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.clear),
+                                      )
+                                      : null,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
                                 borderSide: BorderSide.none,
@@ -252,34 +264,36 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                 ),
                 const SizedBox(height: 15),
                 Expanded(
-                  child: berandaController.filteredOrders.isEmpty
-                      ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inbox_outlined,
-                              size: 60,
-                              color: Colors.grey,
+                  child:
+                      berandaController.filteredOrders.isEmpty
+                          ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.inbox_outlined,
+                                  size: 60,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 15),
+                                Text(
+                                  'Data tidak ditemukan',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 15),
-                            Text(
-                              'Data tidak ditemukan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      : ListView.builder(
-                        itemCount: berandaController.filteredOrders.length,
-                        itemBuilder: (context, index) {
-                          final data = berandaController.filteredOrders[index];
-                          return _buildResiCard(data);
-                        },
-                      ),
+                          )
+                          : ListView.builder(
+                            itemCount: berandaController.filteredOrders.length,
+                            itemBuilder: (context, index) {
+                              final data =
+                                  berandaController.filteredOrders[index];
+                              return _buildResiCard(data);
+                            },
+                          ),
                 ),
               ],
             ],
