@@ -16,6 +16,20 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
 
+  // Tambahkan method ini
+  String _formatName(String? name) {
+    if (name == null || name.isEmpty) return 'Kurir';
+    return name
+        .split(' ')
+        .map(
+          (word) =>
+              word.isEmpty
+                  ? ''
+                  : word[0].toUpperCase() + word.substring(1).toLowerCase(),
+        )
+        .join(' ');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +45,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
 
       final idKurir = loginController.userData?['id_user'];
       if (idKurir == null || idKurir == 0) {
-        // Tampilkan pesan error: "ID Kurir tidak valid, silakan login ulang."
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('ID Kurir tidak valid, silakan login ulang.'),
@@ -54,7 +67,6 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
       });
 
       if (query.isNotEmpty) {
-        // Filter data yang sudah di-load, bukan search ke API
         berandaController.filterOrders(query.trim());
       } else {
         berandaController.clearFilter();
@@ -69,6 +81,44 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive breakpoints
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+
+    // Responsive sizing
+    final headerHeight =
+        isSmallScreen
+            ? screenHeight * 0.28
+            : isMediumScreen
+            ? screenHeight * 0.3
+            : screenHeight * 0.32;
+    final horizontalPadding = screenWidth * 0.05;
+    final avatarRadius =
+        isSmallScreen
+            ? 22.0
+            : isMediumScreen
+            ? 25.0
+            : 28.0;
+    final welcomeFontSize =
+        isSmallScreen
+            ? 12.0
+            : isMediumScreen
+            ? 14.0
+            : 15.0;
+    final nameFontSize =
+        isSmallScreen
+            ? 16.0
+            : isMediumScreen
+            ? 18.0
+            : 20.0;
+    final searchBarPadding =
+        isSmallScreen
+            ? 12.0
+            : isMediumScreen
+            ? 15.0
+            : 18.0;
 
     return Scaffold(
       body: Consumer<LoginController>(
@@ -77,7 +127,7 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
             children: [
               // Header dengan gradient
               Container(
-                height: screenHeight * 0.3,
+                height: headerHeight,
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -88,7 +138,10 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: isSmallScreen ? 12.0 : 16.0,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -99,34 +152,35 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                               onTap: () {
                                 context.go('/profile');
                               },
-                              child: const CircleAvatar(
-                                radius: 25,
+                              child: CircleAvatar(
+                                radius: avatarRadius,
                                 backgroundColor: Colors.white,
                                 child: Icon(
                                   Icons.person,
-                                  color: Color(0xFF4A90E2),
-                                  size: 30,
+                                  color: const Color(0xFF4A90E2),
+                                  size: avatarRadius * 1.2,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 15),
+                            SizedBox(width: isSmallScreen ? 10 : 15),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Selamat Datang,',
+                                  Text(
+                                    'Selamat Datang',
                                     style: TextStyle(
                                       color: Colors.white70,
-                                      fontSize: 14,
+                                      fontSize: welcomeFontSize,
                                     ),
                                   ),
                                   Text(
-                                    loginController.userData?['nama'] ??
-                                        'Kurir',
-                                    style: const TextStyle(
+                                    _formatName(
+                                      loginController.userData?['nama'],
+                                    ),
+                                    style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 18,
+                                      fontSize: nameFontSize,
                                       fontWeight: FontWeight.bold,
                                     ),
                                     maxLines: 1,
@@ -138,29 +192,58 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                           ],
                         ),
 
-                        const SizedBox(height: 30),
+                        SizedBox(
+                          height:
+                              isSmallScreen
+                                  ? 16
+                                  : isMediumScreen
+                                  ? 24
+                                  : 30,
+                        ),
 
                         // Search bar
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: TextField(
                             controller: _searchController,
                             onChanged: _performSearch,
+                            style: TextStyle(
+                              fontSize:
+                                  isSmallScreen
+                                      ? 13
+                                      : isMediumScreen
+                                      ? 14
+                                      : 15,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Cari nomor resi atau alamat...',
-                              prefixIcon: const Icon(
+                              hintStyle: TextStyle(
+                                fontSize:
+                                    isSmallScreen
+                                        ? 12
+                                        : isMediumScreen
+                                        ? 13
+                                        : 14,
+                              ),
+                              prefixIcon: Icon(
                                 Icons.search,
-                                color: Color(0xFF4A90E2),
+                                color: const Color(0xFF4A90E2),
+                                size:
+                                    isSmallScreen
+                                        ? 20
+                                        : isMediumScreen
+                                        ? 22
+                                        : 24,
                               ),
                               suffixIcon:
                                   _searchController.text.isNotEmpty
@@ -176,16 +259,24 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                                                 .clearFilter();
                                           }
                                         },
-                                        icon: const Icon(Icons.clear),
+                                        icon: Icon(
+                                          Icons.clear,
+                                          size:
+                                              isSmallScreen
+                                                  ? 18
+                                                  : isMediumScreen
+                                                  ? 20
+                                                  : 22,
+                                        ),
                                       )
                                       : null,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 15,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: searchBarPadding,
+                                vertical: searchBarPadding,
                               ),
                             ),
                           ),
@@ -202,11 +293,11 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                   ),
-                  transform: Matrix4.translationValues(0, -30, 0),
+                  transform: Matrix4.translationValues(0, -20, 0),
                   child: _buildSearchContent(),
                 ),
               ),
@@ -218,68 +309,141 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   }
 
   Widget _buildSearchContent() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+
     return Consumer<BerandaController>(
       builder: (context, berandaController, child) {
         return Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16.0 : 20.0,
+            vertical: isSmallScreen ? 12.0 : 16.0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              SizedBox(
+                height:
+                    isSmallScreen
+                        ? 12
+                        : isMediumScreen
+                        ? 16
+                        : 20,
+              ),
               if (!_isSearching) ...[
-                // Tampilkan pesan awal ketika belum search
                 Center(
                   child: Text(
                     'Pencarian Data Resi',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize:
+                          isSmallScreen
+                              ? 18
+                              : isMediumScreen
+                              ? 20
+                              : 22,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(
+                  height:
+                      isSmallScreen
+                          ? 20
+                          : isMediumScreen
+                          ? 25
+                          : 30,
+                ),
                 Center(
                   child: Column(
                     children: [
-                      Icon(Icons.search, size: 80, color: Colors.grey[300]),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Ketik nomor resi atau alamat untuk mencari data pengiriman',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                      Icon(
+                        Icons.search,
+                        size:
+                            isSmallScreen
+                                ? 60
+                                : isMediumScreen
+                                ? 70
+                                : 80,
+                        color: Colors.grey[300],
+                      ),
+                      SizedBox(
+                        height:
+                            isSmallScreen
+                                ? 12
+                                : isMediumScreen
+                                ? 16
+                                : 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Ketik nomor resi atau alamat untuk mencari data pengiriman',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize:
+                                isSmallScreen
+                                    ? 13
+                                    : isMediumScreen
+                                    ? 15
+                                    : 16,
+                            color: Colors.grey[500],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ] else ...[
-                // Tampilkan hasil filter sebagai rekomendasi
                 Text(
                   'Rekomendasi (${berandaController.filteredOrders.length})',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize:
+                        isSmallScreen
+                            ? 16
+                            : isMediumScreen
+                            ? 17
+                            : 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 15),
+                SizedBox(
+                  height:
+                      isSmallScreen
+                          ? 10
+                          : isMediumScreen
+                          ? 12
+                          : 15,
+                ),
                 Expanded(
                   child:
                       berandaController.filteredOrders.isEmpty
-                          ? const Center(
+                          ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.inbox_outlined,
-                                  size: 60,
+                                  size:
+                                      isSmallScreen
+                                          ? 50
+                                          : isMediumScreen
+                                          ? 55
+                                          : 60,
                                   color: Colors.grey,
                                 ),
-                                SizedBox(height: 15),
+                                SizedBox(height: isSmallScreen ? 10 : 15),
                                 Text(
                                   'Data tidak ditemukan',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize:
+                                        isSmallScreen
+                                            ? 14
+                                            : isMediumScreen
+                                            ? 15
+                                            : 16,
                                     color: Colors.grey,
                                   ),
                                 ),
@@ -304,50 +468,82 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   }
 
   Widget _buildResiCard(Map<String, dynamic> data) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: EdgeInsets.only(
+        bottom:
+            isSmallScreen
+                ? 10
+                : isMediumScreen
+                ? 12
+                : 15,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(
+          isSmallScreen
+              ? 12.0
+              : isMediumScreen
+              ? 14.0
+              : 16.0,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  data['resi'] ?? 'N/A',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4A90E2),
+                Expanded(
+                  child: Text(
+                    data['resi'] ?? 'N/A',
+                    style: TextStyle(
+                      fontSize:
+                          isSmallScreen
+                              ? 14
+                              : isMediumScreen
+                              ? 15
+                              : 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF4A90E2),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 8 : 10,
+                    vertical: isSmallScreen ? 4 : 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.blue[200]!),
                   ),
                   child: Text(
                     data['status'] ?? 'Proses',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize:
+                          isSmallScreen
+                              ? 10
+                              : isMediumScreen
+                              ? 11
+                              : 12,
                       color: Colors.blue[700],
                       fontWeight: FontWeight.w500,
                     ),
@@ -355,9 +551,23 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(
+              height:
+                  isSmallScreen
+                      ? 8
+                      : isMediumScreen
+                      ? 10
+                      : 12,
+            ),
             _buildInfoRow('Alamat', data['alamat'] ?? 'N/A'),
-            const SizedBox(height: 15),
+            SizedBox(
+              height:
+                  isSmallScreen
+                      ? 10
+                      : isMediumScreen
+                      ? 12
+                      : 15,
+            ),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -369,13 +579,26 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(
+                    vertical:
+                        isSmallScreen
+                            ? 10
+                            : isMediumScreen
+                            ? 11
+                            : 12,
+                  ),
                 ),
-                child: const Text(
+                child: Text(
                   'Mulai Foto Dokumentasi',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
+                    fontSize:
+                        isSmallScreen
+                            ? 13
+                            : isMediumScreen
+                            ? 14
+                            : 15,
                   ),
                 ),
               ),
@@ -387,21 +610,31 @@ class _BerandaKurirScreenState extends State<BerandaKurirScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+    final fontSize =
+        isSmallScreen
+            ? 12.0
+            : isMediumScreen
+            ? 13.0
+            : 14.0;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 80,
+          width: isSmallScreen ? 60 : 80,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
+            style: TextStyle(fontSize: fontSize, color: Colors.black54),
           ),
         ),
-        const Text(': ', style: TextStyle(color: Colors.black54)),
+        Text(': ', style: TextStyle(fontSize: fontSize, color: Colors.black54)),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: TextStyle(fontSize: fontSize, color: Colors.black87),
           ),
         ),
       ],

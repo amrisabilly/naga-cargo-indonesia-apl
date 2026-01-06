@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 
 class FotoWidget extends StatefulWidget {
   final String resi;
@@ -25,6 +24,7 @@ class _FotoWidgetState extends State<FotoWidget> {
   int currentStep = 0;
   List<bool> photoTaken = List.filled(7, false);
   List<File?> photoFiles = List.filled(7, null);
+  bool _isCompressing = false;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -42,277 +42,375 @@ class _FotoWidgetState extends State<FotoWidget> {
   final List<Map<String, dynamic>> photoSteps = [
     {
       'title': 'Tampak Keseluruhan',
-      'description': 'Pastikan agar pengambilan foto mode landscape (miring).',
+      'description': 'Pastikan pengambilan foto mode landscape.',
       'image': 'assets/images/keseluruhan.jpg',
     },
     {
       'title': 'Tampak Barang',
-      'description':
-          'Pastikan label alamat penerima terlihat jelas seperti contoh di bawah.',
+      'description': 'Pastikan label alamat penerima terlihat jelas.',
       'image': 'assets/images/barang.jpg',
     },
     {
       'title': 'Nomor Resi',
-      'description':
-          'Pastikan nomor resi pada paket terlihat jelas seperti contoh di bawah.',
+      'description': 'Pastikan nomor resi terlihat jelas.',
       'image': 'assets/images/resi.jpg',
     },
     {
       'title': 'Tampak Kanan',
-      'description':
-          'Pastikan kondisi fisik kemasan terlihat seperti contoh di bawah.',
+      'description': 'Pastikan kondisi fisik kemasan terlihat.',
       'image': 'assets/images/kanan.jpg',
     },
     {
       'title': 'Tampak Kiri',
-      'description':
-          'Pastikan tanda tangan penerima terlihat jelas seperti contoh di bawah.',
+      'description': 'Pastikan tanda tangan penerima terlihat jelas.',
       'image': 'assets/images/kiri.jpg',
     },
     {
       'title': 'Identitas Penerima',
-      'description':
-          'Pastikan KTP/SIM penerima terlihat jelas seperti contoh di bawah.',
+      'description': 'Pastikan KTP/SIM penerima terlihat jelas.',
       'image': 'assets/images/barang.jpg',
     },
     {
       'title': 'Serah Terima',
-      'description':
-          'Pastikan foto bersama penerima dan paket seperti contoh di bawah.',
+      'description': 'Pastikan foto bersama penerima dan paket.',
       'image': 'assets/images/barang.jpg',
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          // Progress indicator dengan angka
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: List.generate(7, (index) {
-                bool isCompleted = photoTaken[index];
-                bool isCurrent = index == currentStep;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
-                return Expanded(
-                  child: Container(
-                    height: 30,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color:
-                          isCompleted
-                              ? Colors.green
-                              : isCurrent
-                              ? const Color(0xFF4A90E2)
-                              : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
-                      child:
-                          isCompleted
-                              ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 14,
-                              )
-                              : Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color:
-                                      isCurrent
-                                          ? Colors.white
-                                          : Colors.grey[600],
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11,
-                                ),
-                              ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+    // Responsive breakpoints
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+
+    // Responsive sizing
+    final horizontalPadding = screenWidth * 0.05;
+    final progressHeight =
+        isSmallScreen
+            ? 24.0
+            : isMediumScreen
+            ? 26.0
+            : 30.0;
+    final stepFontSize =
+        isSmallScreen
+            ? 10.0
+            : isMediumScreen
+            ? 11.0
+            : 12.0;
+    final titleFontSize =
+        isSmallScreen
+            ? 15.0
+            : isMediumScreen
+            ? 16.0
+            : 18.0;
+    final descFontSize =
+        isSmallScreen
+            ? 11.0
+            : isMediumScreen
+            ? 12.0
+            : 14.0;
+    final guideImageHeight =
+        isSmallScreen
+            ? 120.0
+            : isMediumScreen
+            ? 150.0
+            : 180.0;
+    final previewImageHeight =
+        isSmallScreen
+            ? 150.0
+            : isMediumScreen
+            ? 180.0
+            : 220.0;
+
+    return Stack(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical:
+                isSmallScreen
+                    ? 12.0
+                    : isMediumScreen
+                    ? 16.0
+                    : 20.0,
           ),
-          // Info singkat
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              Text(
-                'Langkah ${currentStep + 1} dari 7',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w500,
+              SizedBox(height: isSmallScreen ? 6 : 10),
+
+              // Progress indicator dengan angka
+              Container(
+                margin: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 8),
+                child: Row(
+                  children: List.generate(7, (index) {
+                    bool isCompleted = photoTaken[index];
+                    bool isCurrent = index == currentStep;
+
+                    return Expanded(
+                      child: Container(
+                        height: progressHeight,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          color:
+                              isCompleted
+                                  ? Colors.green
+                                  : isCurrent
+                                  ? const Color(0xFF4A90E2)
+                                  : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Center(
+                          child:
+                              isCompleted
+                                  ? Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: isSmallScreen ? 12 : 14,
+                                  )
+                                  : Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      color:
+                                          isCurrent
+                                              ? Colors.white
+                                              : Colors.grey[600],
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isSmallScreen ? 9 : 11,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
-              TextButton.icon(
-                onPressed: _hasAnyPhoto() ? _showPreview : null,
-                icon: Icon(
-                  Icons.visibility,
-                  size: 16,
-                  color: _hasAnyPhoto() ? const Color(0xFF4A90E2) : Colors.grey,
-                ),
-                label: Text(
-                  'Preview',
-                  style: TextStyle(
-                    color:
-                        _hasAnyPhoto() ? const Color(0xFF4A90E2) : Colors.grey,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          // Content utama tanpa scroll
-          Expanded(
-            child: Column(
-              children: [
-                // Status foto kompak
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color:
-                        photoTaken[currentStep]
-                            ? Colors.green[50]
-                            : Colors.blue[50],
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color:
-                          photoTaken[currentStep]
-                              ? Colors.green[200]!
-                              : Colors.blue[200]!,
+
+              // Info singkat
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Langkah ${currentStep + 1} dari 7',
+                    style: TextStyle(
+                      fontSize: stepFontSize,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        photoTaken[currentStep]
-                            ? Icons.check_circle
-                            : Icons.camera_alt,
+                  TextButton.icon(
+                    onPressed: _hasAnyPhoto() ? _showPreview : null,
+                    icon: Icon(
+                      Icons.visibility,
+                      size: isSmallScreen ? 14 : 16,
+                      color:
+                          _hasAnyPhoto()
+                              ? const Color(0xFF4A90E2)
+                              : Colors.grey,
+                    ),
+                    label: Text(
+                      'Preview',
+                      style: TextStyle(
+                        color:
+                            _hasAnyPhoto()
+                                ? const Color(0xFF4A90E2)
+                                : Colors.grey,
+                        fontWeight: FontWeight.w500,
+                        fontSize: stepFontSize,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 6 : 8,
+                        vertical: isSmallScreen ? 2 : 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: isSmallScreen ? 8 : 15),
+
+              // Content utama
+              Expanded(
+                child: Column(
+                  children: [
+                    // Status foto kompak
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+                      decoration: BoxDecoration(
                         color:
                             photoTaken[currentStep]
-                                ? Colors.green[700]
-                                : Colors.blue[700],
-                        size: 20,
+                                ? Colors.green[50]
+                                : Colors.blue[50],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color:
+                              photoTaken[currentStep]
+                                  ? Colors.green[200]!
+                                  : Colors.blue[200]!,
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          photoTaken[currentStep]
-                              ? 'Foto berhasil diambil!'
-                              : 'Siap mengambil foto',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                      child: Row(
+                        children: [
+                          Icon(
+                            photoTaken[currentStep]
+                                ? Icons.check_circle
+                                : Icons.camera_alt,
                             color:
                                 photoTaken[currentStep]
                                     ? Colors.green[700]
                                     : Colors.blue[700],
+                            size: isSmallScreen ? 16 : 20,
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 15),
-                // Title dan description singkat
-                Text(
-                  photoSteps[currentStep]['title'],
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  photoSteps[currentStep]['description'],
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 15),
-                // Preview foto jika sudah ada
-                if (photoTaken[currentStep] && photoFiles[currentStep] != null)
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 15),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green[300]!, width: 2),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: Image.file(
-                                photoFiles[currentStep]!,
-                                fit: BoxFit.contain,
-                                height: 220,
+                          SizedBox(width: isSmallScreen ? 6 : 10),
+                          Expanded(
+                            child: Text(
+                              photoTaken[currentStep]
+                                  ? 'Foto berhasil diambil!'
+                                  : 'Siap mengambil foto',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: stepFontSize,
+                                color:
+                                    photoTaken[currentStep]
+                                        ? Colors.green[700]
+                                        : Colors.blue[700],
                               ),
                             ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  )
-                else
-                  // Panduan visual kompak
-                  Expanded(
-                    child: _buildCompactPhotoGuide(
-                      photoSteps[currentStep]['image'],
+
+                    SizedBox(height: isSmallScreen ? 8 : 15),
+
+                    // Title dan description singkat
+                    Text(
                       photoSteps[currentStep]['title'],
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-              ],
+                    SizedBox(height: isSmallScreen ? 4 : 8),
+                    Text(
+                      photoSteps[currentStep]['description'],
+                      style: TextStyle(
+                        fontSize: descFontSize,
+                        color: Colors.black54,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 8 : 15),
+
+                    // Preview foto atau panduan
+                    Expanded(
+                      child:
+                          photoTaken[currentStep] &&
+                                  photoFiles[currentStep] != null
+                              ? Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.green[300]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Stack(
+                                    children: [
+                                      Center(
+                                        child: Image.file(
+                                          photoFiles[currentStep]!,
+                                          fit: BoxFit.contain,
+                                          height: previewImageHeight,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: isSmallScreen ? 12 : 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              : _buildCompactPhotoGuide(
+                                photoSteps[currentStep]['image'],
+                                photoSteps[currentStep]['title'],
+                                guideImageHeight,
+                                isSmallScreen,
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: isSmallScreen ? 8 : 15),
+
+              // Navigation buttons
+              _buildNavigationButtons(isSmallScreen, isMediumScreen),
+            ],
+          ),
+        ),
+
+        // Loading overlay saat compress
+        if (_isCompressing)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
             ),
           ),
-          const SizedBox(height: 15),
-          // Navigation buttons
-          _buildNavigationButtons(),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _buildCompactPhotoGuide(String imagePath, String title) {
+  Widget _buildCompactPhotoGuide(
+    String imagePath,
+    String title,
+    double imageHeight,
+    bool isSmallScreen,
+  ) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF4A90E2),
-          width: 2,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: const Color(0xFF4A90E2), width: 2),
       ),
       child: Container(
-        margin: const EdgeInsets.all(12),
+        margin: EdgeInsets.all(isSmallScreen ? 8 : 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -320,14 +418,26 @@ class _FotoWidgetState extends State<FotoWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(imagePath, fit: BoxFit.contain, height: 180),
-            const SizedBox(height: 10),
-            Text(
-              'Contoh: $title',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.contain,
+                height: imageHeight,
+              ),
+            ),
+            SizedBox(height: isSmallScreen ? 6 : 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                'Contoh: $title',
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 11 : 13,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -336,113 +446,147 @@ class _FotoWidgetState extends State<FotoWidget> {
     );
   }
 
-  Widget _buildNavigationButtons() {
+  Widget _buildNavigationButtons(bool isSmallScreen, bool isMediumScreen) {
+    final buttonHeight =
+        isSmallScreen
+            ? 40.0
+            : isMediumScreen
+            ? 44.0
+            : 48.0;
+    final iconSize = isSmallScreen ? 16.0 : 18.0;
+    final fontSize =
+        isSmallScreen
+            ? 12.0
+            : isMediumScreen
+            ? 13.0
+            : 15.0;
+
     return Column(
       children: [
         // Main action button (Ambil Foto)
         SizedBox(
           width: double.infinity,
+          height: buttonHeight,
           child: ElevatedButton(
-            onPressed: _takePhoto,
+            onPressed: _isCompressing ? null : _takePhoto,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4A90E2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
               elevation: 2,
+              disabledBackgroundColor: Colors.grey[400],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
+                Icon(Icons.camera_alt, color: Colors.white, size: iconSize),
+                SizedBox(width: isSmallScreen ? 6 : 10),
                 Text(
                   photoTaken[currentStep] ? 'Foto Ulang' : 'Ambil Foto',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
-                    fontSize: 15,
+                    fontSize: fontSize,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isSmallScreen ? 6 : 10),
+
         // Navigation buttons row
         Row(
           children: [
             // Previous button
             if (currentStep > 0)
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      currentStep--;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF4A90E2)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  height: buttonHeight,
+                  child: OutlinedButton(
+                    onPressed:
+                        _isCompressing
+                            ? null
+                            : () {
+                              setState(() {
+                                currentStep--;
+                              });
+                            },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF4A90E2)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.arrow_back_ios,
-                        color: Color(0xFF4A90E2),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Sebelumnya',
-                        style: TextStyle(
-                          color: Color(0xFF4A90E2),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_ios,
+                          color: const Color(0xFF4A90E2),
+                          size: iconSize - 2,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: isSmallScreen ? 2 : 4),
+                        Flexible(
+                          child: Text(
+                            'Sebelumnya',
+                            style: TextStyle(
+                              color: const Color(0xFF4A90E2),
+                              fontWeight: FontWeight.w600,
+                              fontSize: fontSize - 1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            if (currentStep > 0) const SizedBox(width: 10),
-            // Next button - hanya muncul jika foto sudah diambil
+            if (currentStep > 0) SizedBox(width: isSmallScreen ? 6 : 10),
+
+            // Next button
             if (photoTaken[currentStep])
               Expanded(
-                child: ElevatedButton(
-                  onPressed: currentStep < 6 ? _goToNextStep : _submitPhotos,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  height: buttonHeight,
+                  child: ElevatedButton(
+                    onPressed:
+                        _isCompressing
+                            ? null
+                            : (currentStep < 6 ? _goToNextStep : _submitPhotos),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      disabledBackgroundColor: Colors.grey[400],
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        currentStep < 6 ? 'Selanjutnya' : 'Upload Foto',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            currentStep < 6 ? 'Selanjutnya' : 'Upload',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: fontSize - 1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        currentStep < 6
-                            ? Icons.arrow_forward_ios
-                            : Icons.cloud_upload,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ],
+                        SizedBox(width: isSmallScreen ? 2 : 4),
+                        Icon(
+                          currentStep < 6
+                              ? Icons.arrow_forward_ios
+                              : Icons.cloud_upload,
+                          color: Colors.white,
+                          size: iconSize - 2,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -485,8 +629,8 @@ class _FotoWidgetState extends State<FotoWidget> {
   Future<File?> compressImage(File file) async {
     final result = await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
-      file.absolute.path + '.webp',
-      quality: 70, // Atur sesuai kebutuhan
+      '${file.absolute.path}_compressed.webp',
+      quality: 70,
       format: CompressFormat.webp,
     );
     return result != null ? File(result.path) : null;
@@ -497,19 +641,37 @@ class _FotoWidgetState extends State<FotoWidget> {
       source: ImageSource.camera,
       imageQuality: 85,
     );
+
     if (pickedFile != null) {
-      // Kompres gambar sebelum disimpan
-      File? compressed = await compressImage(File(pickedFile.path));
+      // Tampilkan loading saat compress
       setState(() {
-        photoTaken[currentStep] = true;
-        photoFiles[currentStep] = compressed ?? File(pickedFile.path);
+        _isCompressing = true;
       });
+
+      try {
+        File? compressed = await compressImage(File(pickedFile.path));
+
+        if (mounted) {
+          setState(() {
+            photoTaken[currentStep] = true;
+            photoFiles[currentStep] = compressed ?? File(pickedFile.path);
+            _isCompressing = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error compressing image: $e');
+        if (mounted) {
+          setState(() {
+            photoTaken[currentStep] = true;
+            photoFiles[currentStep] = File(pickedFile.path);
+            _isCompressing = false;
+          });
+        }
+      }
     }
   }
 
-  /// Submit foto dan update order ke API
   Future<void> _submitPhotos() async {
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -519,10 +681,10 @@ class _FotoWidgetState extends State<FotoWidget> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 20),
-                  const Text('Mengunggah foto dokumentasi...'),
+                children: const [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Mengunggah foto dokumentasi...'),
                 ],
               ),
             ),
@@ -533,8 +695,6 @@ class _FotoWidgetState extends State<FotoWidget> {
       final fotoController = context.read<FotoController>();
       final loginController = context.read<LoginController>();
 
-      // Step 1: Update order dulu
-      print('[DEBUG] Step 1: Updating order...');
       final updateSuccess = await fotoController.updateOrder(
         awb: widget.resi,
         idKurir: loginController.userData?['id_user'] ?? 0,
@@ -543,26 +703,22 @@ class _FotoWidgetState extends State<FotoWidget> {
 
       if (!updateSuccess) {
         if (mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
+          Navigator.of(context).pop();
           _showErrorDialog(fotoController.errorMessage);
         }
         return;
       }
 
-      // Step 2: Upload foto
-      print('[DEBUG] Step 2: Uploading photos...');
       final uploadSuccess = await fotoController.uploadFoto(
         awb: widget.resi,
         photoFiles: photoFiles,
         photoDescriptions: photoDescriptions,
       );
 
-      // Step 3: Simpan ke galeri HP user
       await _savePhotosToGallery();
 
       if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-
+        Navigator.of(context).pop();
         if (uploadSuccess) {
           _showSuccessDialog(fotoController.successMessage);
         } else {
@@ -571,31 +727,26 @@ class _FotoWidgetState extends State<FotoWidget> {
       }
     } catch (e) {
       if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+        Navigator.of(context).pop();
         _showErrorDialog('Error: $e');
       }
     }
   }
 
   Future<void> _savePhotosToGallery() async {
-    // Minta permission storage
     var status = await Permission.photos.request();
     if (!status.isGranted) {
       status = await Permission.storage.request();
     }
-    if (!status.isGranted) {
-      print('Permission not granted');
-      return;
-    }
+    if (!status.isGranted) return;
 
     for (int i = 0; i < photoFiles.length; i++) {
       final file = photoFiles[i];
       if (file != null && await file.exists()) {
         try {
           await Gal.putImage(file.path, album: 'CargoApp');
-          print('Berhasil simpan ke galeri');
         } catch (e) {
-          print('Gagal simpan ke galeri: $e');
+          debugPrint('Gagal simpan ke galeri: $e');
         }
       }
     }
@@ -629,16 +780,9 @@ class _FotoWidgetState extends State<FotoWidget> {
             actions: [
               TextButton(
                 onPressed: () {
-                  print('[DEBUG] Success dialog OK clicked');
-
-                  // Close dialog saja
                   Navigator.of(dialogContext).pop();
-
-                  // Delay untuk ensure dialog sudah fully closed
                   Future.delayed(const Duration(milliseconds: 300), () {
                     if (mounted) {
-                      print('[DEBUG] Navigating to beranda');
-                      // Gunakan GoRouter untuk navigate, jangan Navigator.pop()
                       context.go('/beranda_kurir');
                     }
                   });

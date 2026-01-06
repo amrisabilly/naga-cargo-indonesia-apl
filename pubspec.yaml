@@ -27,8 +27,37 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/lottie/
+
+
+# Perbaiki konfigurasi (ganti flutter_icons menjadi flutter_launcher_icons)
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/naga_cargo.png"
+  min_sdk_android: 21
+
+  # Fix warning iOS alpha channel
+  remove_alpha_ios: true
+
+  # Untuk Android adaptive icon
+  adaptive_icon_background: "#4A90E2"
+  adaptive_icon_foreground: "assets/images/logo.png"
+
+  # Tambahkan platform yang jelas
+  platforms:
+    android:
+      enable: true
+      image_path: "assets/images/naga_cargo.png"
+      adaptive_icon_background: "#4A90E2"
+      adaptive_icon_foreground: "assets/images/naga_cargo.png"
+    ios:
+      enable: true
+      image_path: "assets/images/naga_cargo.png"
+      remove_alpha_channel: true

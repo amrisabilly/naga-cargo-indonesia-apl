@@ -20,12 +20,44 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive breakpoints
+    final isSmallScreen = screenHeight < 650;
+    final isMediumScreen = screenHeight >= 650 && screenHeight <= 800;
+
+    // Responsive sizing
+    final headerHeight =
+        isSmallScreen
+            ? screenHeight * 0.15
+            : isMediumScreen
+            ? screenHeight * 0.17
+            : screenHeight * 0.18;
+    final horizontalPadding = screenWidth * 0.05;
+    final iconSize =
+        isSmallScreen
+            ? 24.0
+            : isMediumScreen
+            ? 26.0
+            : 28.0;
+    final titleFontSize =
+        isSmallScreen
+            ? 12.0
+            : isMediumScreen
+            ? 13.0
+            : 14.0;
+    final resiFontSize =
+        isSmallScreen
+            ? 15.0
+            : isMediumScreen
+            ? 17.0
+            : 18.0;
 
     return Scaffold(
       body: Column(
         children: [
           Container(
-            height: screenHeight * 0.18,
+            height: headerHeight,
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -36,7 +68,10 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: isSmallScreen ? 12.0 : 16.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -56,31 +91,36 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
                               context.go('/beranda_kurir');
                             }
                           },
-                          icon: const Icon(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
                             Icons.arrow_back,
                             color: Colors.white,
-                            size: 28,
+                            size: iconSize,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        SizedBox(width: isSmallScreen ? 8 : 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Mode Foto Dokumentasi',
                                 style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 14,
+                                  fontSize: titleFontSize,
                                 ),
                               ),
+                              SizedBox(height: isSmallScreen ? 2 : 4),
                               Text(
                                 'Resi: ${widget.resi}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: resiFontSize,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -99,11 +139,19 @@ class _FotoKurirScreenState extends State<FotoKurirScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
-              transform: Matrix4.translationValues(0, -30, 0),
+              transform: Matrix4.translationValues(
+                0,
+                isSmallScreen
+                    ? -15
+                    : isMediumScreen
+                    ? -20
+                    : -30,
+                0,
+              ),
               child: FotoWidget(resi: widget.resi, onComplete: _onComplete),
             ),
           ),
